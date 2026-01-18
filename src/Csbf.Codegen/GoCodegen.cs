@@ -7,7 +7,7 @@ public sealed class GoCodegen : ICodegen
 {
     private int _indent = 1;
 
-    public string Emit(IReadOnlyList<Op> ops)
+    public string Emit(IEnumerable<Op> ops)
     {
         var sb = new StringBuilder();
 

@@ -1,7 +1,16 @@
-﻿namespace Csbf.Core.Tests;
+﻿using Xunit.Abstractions;
+
+namespace Csbf.Core.Tests;
 
 public class ParserTests
 {
+    private readonly ITestOutputHelper _testOutputHelper;
+
+    public ParserTests(ITestOutputHelper testOutputHelper)
+    {
+        _testOutputHelper = testOutputHelper;
+    }
+
     [Fact]
     public void Parse_ReturnsEmpty_ForEmptySource()
     {
@@ -65,6 +74,6 @@ public class ParserTests
     public void Parse_ThrowsOnUnexpectedClosingBracket()
     {
         Assert.Throws<InvalidOperationException>(() =>
-            Parser.Parse("+]"));
+            Parser.Parse("+]").ToArray());
     }
 }

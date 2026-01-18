@@ -8,4 +8,4 @@ public record Inc() : Op;
 public record Dec() : Op;
 public record Output() : Op;
 public record Input() : Op;
-public record Loop(IReadOnlyList<Op> Body) : Op;
+public record Loop(IReadOnlyCollection<Op> Body) : Op;

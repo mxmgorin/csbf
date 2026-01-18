@@ -2,14 +2,14 @@ namespace Csbf.Core;
 
 public static class Lowering
 {
-    public static VmOp[] Lower(IReadOnlyList<Op> ops)
+    public static VmOp[] Lower(IEnumerable<Op> ops)
     {
         var outOps = new List<VmOp>();
         Emit(ops, outOps);
         return outOps.ToArray();
     }
 
-    private static void Emit(IReadOnlyList<Op> ops, List<VmOp> outOps)
+    private static void Emit(IEnumerable<Op> ops, List<VmOp> outOps)
     {
         foreach (var op in ops)
         {

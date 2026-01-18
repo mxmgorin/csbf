@@ -2,45 +2,76 @@ namespace Csbf.Core;
 
 public static class Parser
 {
-    public static IReadOnlyList<Op> Parse(string src)
+    private sealed class ParseState
     {
-        var i = 0;
-        var ops = ParseBlock(src, ref i);
-
-        return ops;
+        public int Index;
+        public int Depth;
     }
 
-    private static List<Op> ParseBlock(string src, ref int i)
+    public static IEnumerable<Op> Parse(string src)
     {
-        var ops = new List<Op>();
+        var state = new ParseState();
+        return ParseBlock(src, state);
+    }
 
-        while (i < src.Length)
+    private static IEnumerable<Op> ParseBlock(string src, ParseState state)
+    {
+        while (state.Index < src.Length)
         {
-            switch (src[i])
+            switch (src[state.Index])
             {
-                case '>': ops.Add(new IncPtr()); break;
-                case '<': ops.Add(new DecPtr()); break;
-                case '+': ops.Add(new Inc()); break;
-                case '-': ops.Add(new Dec()); break;
-                case '.': ops.Add(new Output()); break;
-                case ',': ops.Add(new Input()); break;
+                case '>':
+                    state.Index++;
+                    yield return new IncPtr();
+                    break;
+
+                case '<':
+                    state.Index++;
+                    yield return new DecPtr();
+                    break;
+
+                case '+':
+                    state.Index++;
+                    yield return new Inc();
+                    break;
+
+                case '-':
+                    state.Index++;
+                    yield return new Dec();
+                    break;
+
+                case '.':
+                    state.Index++;
+                    yield return new Output();
+                    break;
+
+                case ',':
+                    state.Index++;
+                    yield return new Input();
+                    break;
 
                 case '[':
-                    i++; // consume '['
-                    var body = ParseBlock(src, ref i);
-                    ops.Add(new Loop(body));
-                    continue;
+                    state.Index++; // consume '['
+                    state.Depth++;
+                    var body = ParseBlock(src, state).ToArray();
+                    yield return new Loop(body);
+                    break;
 
                 case ']':
-                    i++; // consume ']'
-                    return ops;
+                    state.Index++; // consume ']'
+                    if (state.Depth == 0)
+                        throw new InvalidOperationException("Unexpected closing bracket");
 
-                // everything else is a comment
+                    state.Depth--;
+                    yield break;
+
+                default:
+                    state.Index++;
+                    break;
             }
-
-            i++;
         }
 
-        return ops;
+        if (state.Depth > 0)
+            throw new InvalidOperationException("Unclosed '['");
     }
 }
