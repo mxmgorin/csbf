@@ -4,12 +4,6 @@ namespace Csbf.Core.Tests;
 
 public class ParserTests
 {
-    private readonly ITestOutputHelper _testOutputHelper;
-
-    public ParserTests(ITestOutputHelper testOutputHelper)
-    {
-        _testOutputHelper = testOutputHelper;
-    }
 
     [Fact]
     public void Parse_ReturnsEmpty_ForEmptySource()

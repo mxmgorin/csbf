@@ -2,21 +2,22 @@ namespace Csbf.Core;
 
 public static class Parser
 {
-    private sealed class ParseState
+    public sealed class ParseState
     {
         public int Index;
-        public int Depth;
+        public int Limit;
     }
+
 
     public static IEnumerable<Op> Parse(string src)
     {
-        var state = new ParseState();
+        var state = new ParseState { Index = 0, Limit = src.Length };
         return ParseBlock(src, state);
     }
 
-    private static IEnumerable<Op> ParseBlock(string src, ParseState state)
+    internal static IEnumerable<Op> ParseBlock(string src, ParseState state)
     {
-        while (state.Index < src.Length)
+        while (state.Index < state.Limit)
         {
             switch (src[state.Index])
             {
@@ -24,54 +25,62 @@ public static class Parser
                     state.Index++;
                     yield return new IncPtr();
                     break;
-
                 case '<':
                     state.Index++;
                     yield return new DecPtr();
                     break;
-
                 case '+':
                     state.Index++;
                     yield return new IncByte();
                     break;
-
                 case '-':
                     state.Index++;
                     yield return new DecByte();
                     break;
-
                 case '.':
                     state.Index++;
                     yield return new Output();
                     break;
-
                 case ',':
                     state.Index++;
                     yield return new Input();
                     break;
 
                 case '[':
-                    state.Index++; // consume '['
-                    state.Depth++;
-                    var body = ParseBlock(src, state).ToArray();
-                    yield return new Loop(body);
+                {
+                    var bodyStart = ++state.Index;
+                    var depth = 1;
+
+                    while (state.Index < state.Limit && depth > 0)
+                    {
+                        switch (src[state.Index])
+                        {
+                            case '[':
+                                depth++;
+                                break;
+                            case ']':
+                                depth--;
+                                break;
+                        }
+
+                        state.Index++;
+                    }
+
+                    if (depth != 0)
+                        throw new InvalidOperationException("Unclosed '['");
+
+                    var bodyEnd = state.Index - 1;
+                    yield return new Loop(src, bodyStart, bodyEnd);
                     break;
+                }
 
                 case ']':
-                    state.Index++; // consume ']'
-                    if (state.Depth == 0)
-                        throw new InvalidOperationException("Unexpected closing bracket");
-
-                    state.Depth--;
-                    yield break;
+                    throw new InvalidOperationException("Unexpected closing bracket");
 
                 default:
                     state.Index++;
                     break;
             }
         }
-
-        if (state.Depth > 0)
-            throw new InvalidOperationException("Unclosed '['");
     }
 }
