@@ -41,6 +41,19 @@ public sealed class App
         var vmOps = Lowering.Lower(ir);
         _vm.Load(vmOps);
     }
+    
+    private void CmdRegs()
+    {
+        if (!_vm.HasProgram())
+        {
+            Console.WriteLine("no program loaded");
+            return;
+        }
+
+        PrintInt("IP", _vm.Ip);
+        PrintInt("DP", _vm.Dp);
+        PrintInt("CELL", _vm.Current);
+    }
 
     private void Dispatch(string[] args)
     {
@@ -58,6 +71,10 @@ public sealed class App
             
             case "load":
                 CmdLoad(args);
+                break;
+            
+            case "regs":
+                CmdRegs();
                 break;
 
             case "exit":
@@ -84,15 +101,20 @@ public sealed class App
         }
     }
 
+    private static void PrintInt(string label, int value)
+    {
+        Console.WriteLine($"{label}: 0x{value:X} ({value})");
+    }
+
     private static void CmdHelp()
     {
         Console.WriteLine("commands:");
         Console.WriteLine();
-        // Console.WriteLine("  load <file>        load Brainfuck source");
+        Console.WriteLine("  load <file>        load Brainfuck source");
         Console.WriteLine("  step               execute one instruction");
         // Console.WriteLine("  run                run until breakpoint or halt");
         // Console.WriteLine("  break <ip>         set breakpoint at instruction index");
-        // Console.WriteLine("  regs               show registers (IP, DP, current cell)");
+        Console.WriteLine("  regs               show registers (IP, DP, current cell)");
         // Console.WriteLine("  mem <from> <len>   dump memory range");
         Console.WriteLine("  help               show this help");
         Console.WriteLine("  exit | quit        exit cli");

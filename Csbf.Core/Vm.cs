@@ -3,59 +3,75 @@
 public class Vm(int memSize = 30_000)
 {
     /// Instruction pointer
-    private int _ip;
+    public int Ip { get; private set; }
 
     /// data pointer
-    private int _dp;
+    public int Dp { get; private set; }
 
     private readonly byte[] _mem = new byte[memSize];
     private VmOp[] _program = [];
+
+    public byte Current => _mem[Dp];
 
     public void Load(VmOp[] program)
     {
         _program = program;
     }
 
+    public bool HasProgram()
+    {
+        return _program.Length != 0;
+    }
+
+    public ReadOnlySpan<byte> Read(uint from, uint len)
+    {
+        if (from >= _mem.Length)
+            throw new ArgumentOutOfRangeException(nameof(from));
+
+        var end = Math.Min(from + len, _mem.Length);
+        return new ReadOnlySpan<byte>(_mem, (int)from, (int)(end - from));
+    }
+
     public void Step(Func<byte>? input = null, Action<byte>? output = null)
     {
-        if (_ip >= _program.Length)
+        if (Ip >= _program.Length)
         {
             return;
         }
-        
-        ref readonly var op = ref _program[_ip];
+
+        ref readonly var op = ref _program[Ip];
         switch (op.Kind)
         {
             case VmOpKind.IncPtr:
-                _dp++;
+                Dp++;
                 break;
             case VmOpKind.DecPtr:
-                _dp--;
+                Dp--;
                 break;
             case VmOpKind.IncByte:
-                _mem[_dp]++;
+                _mem[Dp]++;
                 break;
             case VmOpKind.DecByte:
-                _mem[_dp]--;
+                _mem[Dp]--;
                 break;
             case VmOpKind.Out:
-                output?.Invoke(_mem[_dp]);
+                output?.Invoke(_mem[Dp]);
                 break;
             case VmOpKind.In:
-                _mem[_dp] = input?.Invoke() ?? 0;
+                _mem[Dp] = input?.Invoke() ?? 0;
                 break;
             case VmOpKind.Jz:
-                if (_mem[_dp] == 0)
+                if (_mem[Dp] == 0)
                 {
-                    _ip = op.Arg;
+                    Ip = op.Arg;
                     return;
                 }
 
                 break;
             case VmOpKind.Jnz:
-                if (_mem[_dp] != 0)
+                if (_mem[Dp] != 0)
                 {
-                    _ip = op.Arg;
+                    Ip = op.Arg;
                     return;
                 }
 
@@ -64,6 +80,6 @@ public class Vm(int memSize = 30_000)
                 throw new ArgumentOutOfRangeException();
         }
 
-        _ip++;
+        Ip++;
     }
 }
