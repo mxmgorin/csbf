@@ -7,7 +7,7 @@ public static class Parser
         var i = 0;
         var ops = ParseBlock(src, ref i);
 
-        return i < src.Length ? throw new InvalidOperationException("unexpected ']'") : ops;
+        return ops;
     }
 
     private static List<Op> ParseBlock(string src, ref int i)
@@ -32,7 +32,7 @@ public static class Parser
                     continue;
 
                 case ']':
-                    // end of this block
+                    i++; // consume ']'
                     return ops;
 
                 // everything else is a comment
