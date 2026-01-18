@@ -32,6 +32,10 @@ public sealed class App
             case "regs":
                 CmdRegs();
                 break;
+            
+            case "mem":
+                CmdMem(args);
+                break;
 
             case "exit":
             case "quit":
@@ -121,6 +125,44 @@ public sealed class App
         PrintInt("IP", _vm.Ip);
         PrintInt("DP", _vm.Dp);
         PrintInt("CELL", _vm.Current);
+    }
+
+    private void CmdMem(string[] args)
+    {
+        if (!_vm.HasProgram())
+        {
+            Console.WriteLine("no program loaded");
+            return;
+        }
+
+        if (args.Length < 3 ||
+            !uint.TryParse(args[1], out var from) ||
+            !uint.TryParse(args[2], out var len))
+        {
+            Console.WriteLine("usage: mem <from> <len>");
+            return;
+        }
+
+        ReadOnlySpan<byte> span;
+        try
+        {
+            span = _vm.Read(from, len);
+        }
+        catch (ArgumentOutOfRangeException)
+        {
+            Console.WriteLine("out of range");
+            return;
+        }
+
+        for (var i = 0; i < span.Length; i++)
+        {
+            if (i % 16 == 0)
+                Console.Write($"\n{from + i:X5}: ");
+
+            Console.Write($"{span[i]:X2} ");
+        }
+
+        Console.WriteLine();
     }
 
 
