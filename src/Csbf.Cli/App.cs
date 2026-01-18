@@ -7,6 +7,43 @@ public sealed class App
 {
     private readonly Vm _vm = new();
 
+    public void Dispatch(string[] args)
+    {
+        var cmd = args[0];
+
+        switch (cmd)
+        {
+            case "help":
+                CmdHelp();
+                break;
+
+            case "step":
+                CmdStep();
+                break;
+
+            case "run":
+                CmdRun();
+                break;
+
+            case "load":
+                CmdLoad(args);
+                break;
+
+            case "regs":
+                CmdRegs();
+                break;
+
+            case "exit":
+            case "quit":
+                Environment.Exit(0);
+                break;
+
+            default:
+                Console.WriteLine("unknown command");
+                break;
+        }
+    }
+
     public void Run()
     {
         while (true)
@@ -86,42 +123,6 @@ public sealed class App
         PrintInt("CELL", _vm.Current);
     }
 
-    private void Dispatch(string[] args)
-    {
-        var cmd = args[0];
-
-        switch (cmd)
-        {
-            case "help":
-                CmdHelp();
-                break;
-
-            case "step":
-                CmdStep();
-                break;
-
-            case "run":
-                CmdRun();
-                break;
-
-            case "load":
-                CmdLoad(args);
-                break;
-
-            case "regs":
-                CmdRegs();
-                break;
-
-            case "exit":
-            case "quit":
-                Environment.Exit(0);
-                break;
-
-            default:
-                Console.WriteLine("unknown command");
-                break;
-        }
-    }
 
     private static string ReadFile(string path)
     {
