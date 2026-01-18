@@ -1,7 +1,11 @@
+using Csbf.Core;
+
 namespace Csbf.Cli;
 
 public sealed class App
 {
+    private Vm _vm = new();
+
     public void Run()
     {
         while (true)

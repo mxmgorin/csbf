@@ -2,6 +2,6 @@
 
 using Csbf.Cli;
 
-Console.WriteLine("csbf cli");
+Console.WriteLine("csbf cli. Type 'help' for commands.");
 var app = new App();
 app.Run();
