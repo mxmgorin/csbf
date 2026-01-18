@@ -50,11 +50,11 @@ public sealed class GoCodegen : ICodegen
                 EmitLine(sb, "dp--");
                 break;
 
-            case Inc:
+            case IncByte:
                 EmitLine(sb, "mem[dp]++");
                 break;
 
-            case Dec:
+            case DecByte:
                 EmitLine(sb, "mem[dp]--");
                 break;
 

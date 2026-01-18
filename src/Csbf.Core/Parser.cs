@@ -32,12 +32,12 @@ public static class Parser
 
                 case '+':
                     state.Index++;
-                    yield return new Inc();
+                    yield return new IncByte();
                     break;
 
                 case '-':
                     state.Index++;
-                    yield return new Dec();
+                    yield return new DecByte();
                     break;
 
                 case '.':

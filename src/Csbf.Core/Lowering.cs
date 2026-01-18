@@ -23,11 +23,11 @@ public static class Lowering
                     outOps.Add(new VmOp(VmOpKind.DecPtr, 0));
                     break;
 
-                case Inc:
+                case IncByte:
                     outOps.Add(new VmOp(VmOpKind.IncByte, 0));
                     break;
 
-                case Dec:
+                case DecByte:
                     outOps.Add(new VmOp(VmOpKind.DecByte, 0));
                     break;
 

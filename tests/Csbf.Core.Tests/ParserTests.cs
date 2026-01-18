@@ -25,8 +25,8 @@ public class ParserTests
         var ops = Parser.Parse("+-<>.,");
 
         Assert.Collection(ops,
-            op => Assert.IsType<Inc>(op),
-            op => Assert.IsType<Dec>(op),
+            op => Assert.IsType<IncByte>(op),
+            op => Assert.IsType<DecByte>(op),
             op => Assert.IsType<DecPtr>(op),
             op => Assert.IsType<IncPtr>(op),
             op => Assert.IsType<Output>(op),
@@ -43,8 +43,8 @@ public class ParserTests
         Assert.NotNull(loop);
 
         Assert.Collection(loop.Body,
-            op => Assert.IsType<Inc>(op),
-            op => Assert.IsType<Dec>(op)
+            op => Assert.IsType<IncByte>(op),
+            op => Assert.IsType<DecByte>(op)
         );
     }
     
@@ -57,13 +57,13 @@ public class ParserTests
         Assert.NotNull(outer);
 
         Assert.Collection(outer.Body,
-            op => Assert.IsType<Inc>(op),
+            op => Assert.IsType<IncByte>(op),
             op =>
             {
                 var inner = Assert.IsType<Loop>(op);
                 Assert.Collection(inner.Body,
-                    x => Assert.IsType<Dec>(x),
-                    x => Assert.IsType<Dec>(x)
+                    x => Assert.IsType<DecByte>(x),
+                    x => Assert.IsType<DecByte>(x)
                 );
             }
         );
