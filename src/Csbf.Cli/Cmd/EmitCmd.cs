@@ -1,3 +1,4 @@
+using Csbf.Codegen;
 using Csbf.Core;
 
 namespace Csbf.Cli.Cmd;
@@ -6,6 +7,13 @@ public class EmitCmd : ICmd
 {
     public string Name => "emit";
     public string[] Aliases => [];
+
+    private readonly Dictionary<string, ICodegen> _codegenByLang =
+        new(StringComparer.OrdinalIgnoreCase)
+        {
+            ["go"] = new GoCodegen(),
+        };
+
 
     public void Execute(IContext ctx, string[] args)
     {
@@ -16,7 +24,7 @@ public class EmitCmd : ICmd
         }
 
         var lang = args[1];
-        if (!ctx.Codegens.TryGetValue(lang, out var cg))
+        if (!_codegenByLang.TryGetValue(lang, out var codegen))
         {
             Console.WriteLine($"unknown backend: {lang}");
             return;
@@ -24,7 +32,8 @@ public class EmitCmd : ICmd
 
         var src = File.ReadAllText(args[2]);
         var ops = Parser.Parse(src);
-        var code = cg.Emit(ops);
+        new Pipeline(codegen).Run(ops);
+        var code = codegen.Flush();
         File.WriteAllText(args[3], code);
 
         Console.WriteLine($"emitted to {lang}: {args[3]}");

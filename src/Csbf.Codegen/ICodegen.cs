@@ -4,5 +4,8 @@ namespace Csbf.Codegen;
 
 public interface ICodegen
 {
-    string Emit(IEnumerable<Op> ops);
+    void OnOp(Op op);
+    void OnBegin();
+    void OnEnd(ProgramAnalysis analysis);
+    string Flush();
 }
