@@ -5,7 +5,4 @@ using Csbf.Cli;
 Console.WriteLine("csbf cli. Type 'help' for commands.");
 
 var app = new App();
-
-if (args.Length > 0) app.Dispatch(args);
-
-app.Run();
+app.Run(args);
