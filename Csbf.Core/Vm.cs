@@ -37,6 +37,17 @@ public class Vm(int memSize = 30_000)
         return new ReadOnlySpan<byte>(_mem, (int)from, (int)(end - from));
     }
 
+    public VmOp? Peek()
+    {
+        if (ProgramFinished())
+            return null;
+
+        if (Ip < 0 || Ip >= _program.Length)
+            return null;
+
+        return _program[Ip];
+    }
+
     public void Step(Func<byte>? input = null, Action<byte>? output = null)
     {
         if (ProgramFinished())
@@ -45,6 +56,13 @@ public class Vm(int memSize = 30_000)
         }
 
         ref readonly var op = ref _program[Ip];
+        Execute(op, input, output);
+
+        Ip++;
+    }
+
+    private void Execute(VmOp op, Func<byte>? input = null, Action<byte>? output = null)
+    {
         switch (op.Kind)
         {
             case VmOpKind.IncPtr:
@@ -69,7 +87,6 @@ public class Vm(int memSize = 30_000)
                 if (_mem[Dp] == 0)
                 {
                     Ip = op.Arg;
-                    return;
                 }
 
                 break;
@@ -77,14 +94,11 @@ public class Vm(int memSize = 30_000)
                 if (_mem[Dp] != 0)
                 {
                     Ip = op.Arg;
-                    return;
                 }
 
                 break;
             default:
                 throw new ArgumentOutOfRangeException();
         }
-
-        Ip++;
     }
 }

@@ -24,17 +24,32 @@ public sealed class App
 
     private void CmdStep()
     {
+        if (!_vm.HasProgram())
+        {
+            Console.WriteLine("no program loaded");
+            return;
+        }
+
+        var op = _vm.Peek();
+
+        if (op is null)
+        {
+            Console.WriteLine("program finished");
+            return;
+        }
+
+        var ip = _vm.Ip;
         _vm.Step(ReadByte, WriteByte);
-        Console.WriteLine("Executed 1 step");
+        Console.WriteLine($"0x{ip:X}: {op}");
     }
-    
+
     private void CmdRun()
     {
         while (!_vm.ProgramFinished())
         {
             _vm.Step(ReadByte, WriteByte);
         }
-        
+
         Console.WriteLine();
         Console.WriteLine("program finished");
     }
@@ -46,18 +61,18 @@ public sealed class App
             Console.WriteLine("usage: load <path>");
             return;
         }
-        
+
         var path = args[1];
         var text = ReadFile(path);
 
         if (string.IsNullOrEmpty(text)) return;
-        
+
         var ir = Parser.Parse(text);
         var vmOps = Lowering.Lower(ir);
         _vm.Load(vmOps);
         Console.WriteLine("program loaded");
     }
-    
+
     private void CmdRegs()
     {
         if (!_vm.HasProgram())
@@ -84,15 +99,15 @@ public sealed class App
             case "step":
                 CmdStep();
                 break;
-            
+
             case "run":
                 CmdRun();
                 break;
-            
+
             case "load":
                 CmdLoad(args);
                 break;
-            
+
             case "regs":
                 CmdRegs();
                 break;
