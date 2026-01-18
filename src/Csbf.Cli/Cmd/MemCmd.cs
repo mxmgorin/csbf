@@ -2,7 +2,7 @@ namespace Csbf.Cli.Cmd;
 
 public class MemCmd : ICmd
 {
-    public string Name => "Mem";
+    public string Name => "mem";
     public string[] Aliases => [];
 
     public void Execute(IContext ctx, string[] args)
