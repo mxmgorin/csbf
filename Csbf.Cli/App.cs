@@ -4,7 +4,7 @@ namespace Csbf.Cli;
 
 public sealed class App
 {
-    private Vm _vm = new();
+    private readonly Vm _vm = new();
 
     public void Run()
     {
@@ -21,7 +21,13 @@ public sealed class App
         }
     }
 
-    private static void Dispatch(string[] args)
+    private void CmdStep()
+    {
+        _vm.Step();
+        Console.WriteLine("Executed 1 step");
+    }
+
+    private void Dispatch(string[] args)
     {
         var cmd = args[0];
 
@@ -29,6 +35,10 @@ public sealed class App
         {
             case "help":
                 CmdHelp();
+                break;
+
+            case "step":
+                CmdStep();
                 break;
 
             case "exit":
@@ -47,7 +57,7 @@ public sealed class App
         Console.WriteLine("commands:");
         Console.WriteLine();
         // Console.WriteLine("  load <file>        load Brainfuck source");
-        // Console.WriteLine("  step               execute one instruction");
+        Console.WriteLine("  step               execute one instruction");
         // Console.WriteLine("  run                run until breakpoint or halt");
         // Console.WriteLine("  break <ip>         set breakpoint at instruction index");
         // Console.WriteLine("  regs               show registers (IP, DP, current cell)");
