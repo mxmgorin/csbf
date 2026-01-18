@@ -23,10 +23,8 @@ public class EmitCmd : ICmd
         }
 
         var src = File.ReadAllText(args[2]);
-        var ir = Parser.Parse(src);
-        var vmOps = Lowering.Lower(ir);
-
-        var code = cg.Emit(vmOps);
+        var ops = Parser.Parse(src);
+        var code = cg.Emit(ops);
         File.WriteAllText(args[3], code);
 
         Console.WriteLine($"emitted to {lang}: {args[3]}");

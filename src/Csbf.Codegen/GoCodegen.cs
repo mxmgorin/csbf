@@ -3,9 +3,11 @@ using Csbf.Core;
 
 namespace Csbf.Codegen;
 
-public class GoCodegen : ICodegen
+public sealed class GoCodegen : ICodegen
 {
-    public string Emit(IReadOnlyList<VmOp> ops)
+    private int _indent = 1;
+
+    public string Emit(IReadOnlyList<Op> ops)
     {
         var sb = new StringBuilder();
 
@@ -22,54 +24,64 @@ public class GoCodegen : ICodegen
         sb.AppendLine("  dp := 0");
         sb.AppendLine("  r := bufio.NewReader(os.Stdin)");
 
-        const int indent = 1;
-
         foreach (var op in ops)
         {
-            switch (op.Kind)
-            {
-                case VmOpKind.IncPtr:
-                    Line($"dp += {op.Arg}");
-                    break;
-
-                case VmOpKind.DecPtr:
-                    Line($"dp -= {op.Arg}");
-                    break;
-
-                case VmOpKind.IncByte:
-                    Line($"mem[dp] += {op.Arg}");
-                    break;
-
-                case VmOpKind.DecByte:
-                    Line($"mem[dp] -= {op.Arg}");
-                    break;
-
-                case VmOpKind.Out:
-                    Line("fmt.Printf(\"%c\", mem[dp])");
-                    break;
-
-                case VmOpKind.In:
-                    Line("b, _ := r.ReadByte()");
-                    Line("mem[dp] = b");
-                    break;
-
-                case VmOpKind.Jz:
-                    Line($"if mem[dp] == 0 {{ ip = {op.Arg}; continue }}");
-                    break;
-
-                case VmOpKind.Jnz:
-                    Line($"if mem[dp] != 0 {{ ip = {op.Arg}; continue }}");
-                    break;
-                default:
-                    throw new ArgumentOutOfRangeException();
-            }
+            EmitOp(sb, op);
         }
-
 
         sb.AppendLine("}");
         return sb.ToString();
+    }
 
-        void Line(string s)
-            => sb.AppendLine(new string(' ', indent * 2) + s);
+    private void EmitLine(StringBuilder sb, string s)
+    {
+        sb.AppendLine(new string(' ', _indent * 2) + s);
+    }
+
+    private void EmitOp(StringBuilder sb, Op op)
+    {
+        switch (op)
+        {
+            case IncPtr:
+                EmitLine(sb, "dp++");
+                break;
+
+            case DecPtr:
+                EmitLine(sb, "dp--");
+                break;
+
+            case Inc:
+                EmitLine(sb, "mem[dp]++");
+                break;
+
+            case Dec:
+                EmitLine(sb, "mem[dp]--");
+                break;
+
+            case Output:
+                EmitLine(sb, "fmt.Printf(\"%c\", mem[dp])");
+                break;
+
+            case Input:
+                EmitLine(sb, "b, _ := r.ReadByte()");
+                EmitLine(sb, "mem[dp] = b");
+                break;
+
+            case Loop l:
+                EmitLine(sb, "for mem[dp] != 0 {");
+                _indent++;
+
+                foreach (var inner in l.Body)
+                {
+                    EmitOp(sb, inner);
+                }
+
+                _indent--;
+                EmitLine(sb, "}");
+                break;
+
+            default:
+                throw new NotSupportedException(op.GetType().Name);
+        }
     }
 }

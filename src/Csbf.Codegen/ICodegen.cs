@@ -4,5 +4,5 @@ namespace Csbf.Codegen;
 
 public interface ICodegen
 {
-    string Emit(IReadOnlyList<VmOp> ops);
+    string Emit(IReadOnlyList<Op> ops);
 }
