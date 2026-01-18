@@ -1,6 +1,6 @@
 ﻿namespace Csbf.Core;
 
-public class Vm
+public class Vm(int memSize = 30_000)
 {
     /// Instruction pointer
     private int _ip;
@@ -8,16 +8,8 @@ public class Vm
     /// data pointer
     private int _dp;
 
-    private readonly byte[] _mem;
-    private VmOp[] _program;
-
-    public Vm(int memSize = 30_000)
-    {
-        _program = [];
-        _mem = new byte[memSize];
-        _ip = 0;
-        _dp = 0;
-    }
+    private readonly byte[] _mem = new byte[memSize];
+    private VmOp[] _program = [];
 
     public void Load(VmOp[] program)
     {

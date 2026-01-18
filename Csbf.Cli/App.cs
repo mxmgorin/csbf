@@ -27,6 +27,21 @@ public sealed class App
         Console.WriteLine("Executed 1 step");
     }
 
+    private void CmdLoad(string[] args)
+    {
+        if (args.Length < 2)
+        {
+            Console.WriteLine("usage: load <path>");
+            return;
+        }
+        
+        var path = args[1];
+        var text = ReadFile(path);
+        var ir = Parser.Parse(text);
+        var vmOps = Lowering.Lower(ir);
+        _vm.Load(vmOps);
+    }
+
     private void Dispatch(string[] args)
     {
         var cmd = args[0];
@@ -40,6 +55,10 @@ public sealed class App
             case "step":
                 CmdStep();
                 break;
+            
+            case "load":
+                CmdLoad(args);
+                break;
 
             case "exit":
             case "quit":
@@ -49,6 +68,19 @@ public sealed class App
             default:
                 Console.WriteLine("unknown command");
                 break;
+        }
+    }
+
+    private static string ReadFile(string path)
+    {
+        try
+        {
+            return File.ReadAllText(path);
+        }
+        catch (FileNotFoundException)
+        {
+            Console.WriteLine("File not found");
+            return string.Empty;
         }
     }
 
