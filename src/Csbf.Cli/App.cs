@@ -1,11 +1,11 @@
-using System.IO.Compression;
 using Csbf.Core;
+using Csbf.Debugger;
 
 namespace Csbf.Cli;
 
 public sealed class App
 {
-    private readonly Vm _vm = new();
+    private readonly Debugger.Debugger _dbg = new(new Vm(ReadByte, WriteByte));
 
     public void Dispatch(string[] args)
     {
@@ -36,6 +36,10 @@ public sealed class App
             case "mem":
                 CmdMem(args);
                 break;
+            
+            case "break":
+                CmdBreak(args);
+                break;
 
             case "exit":
             case "quit":
@@ -65,13 +69,13 @@ public sealed class App
 
     private void CmdStep()
     {
-        if (!_vm.HasProgram())
+        if (!_dbg.Vm.HasProgram())
         {
             Console.WriteLine("no program loaded");
             return;
         }
 
-        var op = _vm.Peek();
+        var op = _dbg.Vm.Peek();
 
         if (op is null)
         {
@@ -79,20 +83,40 @@ public sealed class App
             return;
         }
 
-        var ip = _vm.Ip;
-        _vm.Step(ReadByte, WriteByte);
+        var ip = _dbg.Vm.Ip;
+        _dbg.Vm.Step();
         Console.WriteLine($"0x{ip:X}: {op}");
     }
+    
+    private void CmdBreak(string[] args)
+    {
+        if (args.Length < 2 || !int.TryParse(args[1], out var ip))
+        {
+            Console.WriteLine("usage: break <ip>");
+            return;
+        }
+
+        Console.WriteLine(_dbg.AddBreakpoint(ip)
+            ? $"breakpoint set at 0x{ip:X} ({ip})"
+            : $"breakpoint already exists at 0x{ip:X} ({ip})");
+    }
+
 
     private void CmdRun()
     {
-        while (!_vm.ProgramFinished())
-        {
-            _vm.Step(ReadByte, WriteByte);
-        }
+        var res = _dbg.Debug();
 
-        Console.WriteLine();
-        Console.WriteLine("program finished");
+        switch (res)
+        {
+            case DebugResult.HitBreakpoint:
+                Console.WriteLine($"hit breakpoint at 0x{_dbg.Vm.Ip:X}");
+                break;
+            case DebugResult.Finished:
+                Console.WriteLine("\nprogram finished");
+                break;
+            default:
+                throw new ArgumentOutOfRangeException();
+        }
     }
 
     private void CmdLoad(string[] args)
@@ -110,26 +134,26 @@ public sealed class App
 
         var ir = Parser.Parse(text);
         var vmOps = Lowering.Lower(ir);
-        _vm.Load(vmOps);
+        _dbg.Vm.Load(vmOps);
         Console.WriteLine("program loaded");
     }
 
     private void CmdRegs()
     {
-        if (!_vm.HasProgram())
+        if (!_dbg.Vm.HasProgram())
         {
             Console.WriteLine("no program loaded");
             return;
         }
 
-        PrintInt("IP", _vm.Ip);
-        PrintInt("DP", _vm.Dp);
-        PrintInt("CELL", _vm.Current);
+        PrintInt("IP", _dbg.Vm.Ip);
+        PrintInt("DP", _dbg.Vm.Dp);
+        PrintInt("CELL", _dbg.Vm.Current);
     }
 
     private void CmdMem(string[] args)
     {
-        if (!_vm.HasProgram())
+        if (!_dbg.Vm.HasProgram())
         {
             Console.WriteLine("no program loaded");
             return;
@@ -146,7 +170,7 @@ public sealed class App
         ReadOnlySpan<byte> span;
         try
         {
-            span = _vm.Read(from, len);
+            span = _dbg.Vm.Read(from, len);
         }
         catch (ArgumentOutOfRangeException)
         {
@@ -196,7 +220,7 @@ public sealed class App
     {
         var ch = Console.Read();
         if (ch < 0)
-            return 0; // EOF → 0 is conventional in BF
+            return 0; // EOF == 0 is conventional in BF
 
         return (byte)ch;
     }
@@ -213,9 +237,9 @@ public sealed class App
         Console.WriteLine("  load <file>        load Brainfuck source");
         Console.WriteLine("  step               execute one instruction");
         Console.WriteLine("  run                run until breakpoint or halt");
-        // Console.WriteLine("  break <ip>         set breakpoint at instruction index");
+        Console.WriteLine("  break <ip>         set breakpoint at instruction pointer");
         Console.WriteLine("  regs               show registers (IP, DP, current cell)");
-        // Console.WriteLine("  mem <from> <len>   dump memory range");
+        Console.WriteLine("  mem <from> <len>   dump memory range");
         Console.WriteLine("  help               show this help");
         Console.WriteLine("  exit | quit        exit cli");
         Console.WriteLine();

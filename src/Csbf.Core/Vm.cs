@@ -1,6 +1,6 @@
 ﻿namespace Csbf.Core;
 
-public class Vm(int memSize = 30_000)
+public class Vm(Func<byte>? input = null, Action<byte>? output = null, int memSize = 30_000)
 {
     /// Instruction pointer
     public int Ip { get; private set; }
@@ -48,7 +48,7 @@ public class Vm(int memSize = 30_000)
         return _program[Ip];
     }
 
-    public void Step(Func<byte>? input = null, Action<byte>? output = null)
+    public void Step()
     {
         if (ProgramFinished())
         {
@@ -56,12 +56,12 @@ public class Vm(int memSize = 30_000)
         }
 
         ref readonly var op = ref _program[Ip];
-        Execute(op, input, output);
+        Execute(op);
 
         Ip++;
     }
 
-    private void Execute(VmOp op, Func<byte>? input = null, Action<byte>? output = null)
+    private void Execute(VmOp op)
     {
         switch (op.Kind)
         {
