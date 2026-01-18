@@ -23,6 +23,11 @@ public class Vm(int memSize = 30_000)
         return _program.Length != 0;
     }
 
+    public bool ProgramFinished()
+    {
+        return Ip >= _program.Length;
+    }
+
     public ReadOnlySpan<byte> Read(uint from, uint len)
     {
         if (from >= _mem.Length)
@@ -34,7 +39,7 @@ public class Vm(int memSize = 30_000)
 
     public void Step(Func<byte>? input = null, Action<byte>? output = null)
     {
-        if (Ip >= _program.Length)
+        if (ProgramFinished())
         {
             return;
         }
