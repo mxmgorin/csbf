@@ -78,16 +78,16 @@ public class Vm(Func<byte>? input = null, Action<byte>? output = null, int memor
         switch (op.Kind)
         {
             case OpKind.IncPtr:
-                Dp++;
+                Dp += op.Arg;
                 break;
             case OpKind.DecPtr:
-                Dp--;
+                Dp -= op.Arg;
                 break;
             case OpKind.IncByte:
-                _memory[Dp]++;
+                _memory[Dp] += (byte)op.Arg;
                 break;
             case OpKind.DecByte:
-                _memory[Dp]--;
+                _memory[Dp] -= (byte)op.Arg;
                 break;
             case OpKind.Out:
                 output?.Invoke(_memory[Dp]);
