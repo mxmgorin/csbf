@@ -2,7 +2,6 @@ namespace Csbf.Core;
 
 public static class Parser
 {
-
     public static IReadOnlyList<Op> Parse(string src)
     {
         var ops = new List<Op>();
@@ -22,8 +21,7 @@ public static class Parser
                 case '[':
                 {
                     // Emit Jz with dummy target
-                    var jz = new Op(OpKind.Jz, -1);
-                    ops.Add(jz);
+                    ops.Add(new Op(OpKind.Jz, -1));
                     loopStack.Push(ops.Count - 1);
                     break;
                 }
@@ -35,14 +33,11 @@ public static class Parser
                         throw new InvalidOperationException("Unexpected closing bracket");
                     }
 
-                    var openIndex = loopStack.Pop();
-
-                    // Emit Jnz back to the instruction after '['
-                    var jnz = new Op(OpKind.Jnz, openIndex);
-                    ops.Add(jnz);
+                    var startIndex = loopStack.Pop();
+                    ops.Add(new Op(OpKind.Jnz, startIndex));
 
                     // Patch the earlier Jz to jump here (after Jnz)
-                    ops[openIndex] = new Op(OpKind.Jz, ops.Count);
+                    ops[startIndex] = new Op(OpKind.Jz, ops.Count);
                     break;
                 }
             }
