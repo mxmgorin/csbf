@@ -15,6 +15,7 @@ public class HelpCmd : ICmd
         Console.WriteLine("  break <ip>               set breakpoint at instruction pointer");
         Console.WriteLine("  regs                     show registers (IP, DP, current cell)");
         Console.WriteLine("  mem <from> <len>         dump memory range");
+        Console.WriteLine("  eval <src>               execute inline Brainfuck source");
         Console.WriteLine("  emit <lang> <in> [out]   compile <in> to target language <lang>");
         Console.WriteLine("  help                     show this help");
         Console.WriteLine("  exit | quit              exit cli");
