@@ -61,12 +61,12 @@ public sealed class GoCodegen : ICodegen
                 EmitLine("b, _ := r.ReadByte()");
                 EmitLine("mem[dp] = b");
                 break;
-            
+
             case OpKind.Jz:
                 EmitLine("for mem[dp] != 0 {");
                 _indent++;
                 break;
-            
+
             case OpKind.Jnz:
                 _indent--;
                 EmitLine("}");
@@ -80,7 +80,7 @@ public sealed class GoCodegen : ICodegen
     public string Emit()
     {
         var sb = new StringBuilder();
-        
+
         EmitHeader(sb);
         sb.AppendLine();
 
@@ -97,19 +97,23 @@ public sealed class GoCodegen : ICodegen
     {
         sb.AppendLine("package main");
         sb.AppendLine();
-        sb.AppendLine("import (");
 
-        if (_analysis.UsesInput)
+        if (_analysis.UsesOutput || _analysis.UsesInput)
         {
-            sb.AppendLine("  \"bufio\"");
-            sb.AppendLine("  \"os\"");
-        }
+            sb.AppendLine("import (");
 
-        if (_analysis.UsesOutput)
-        {
-            sb.AppendLine("  \"fmt\"");
-        }
+            if (_analysis.UsesInput)
+            {
+                sb.AppendLine("  \"bufio\"");
+                sb.AppendLine("  \"os\"");
+            }
 
-        sb.AppendLine(")");
+            if (_analysis.UsesOutput)
+            {
+                sb.AppendLine("  \"fmt\"");
+            }
+
+            sb.AppendLine(")");
+        }
     }
 }
