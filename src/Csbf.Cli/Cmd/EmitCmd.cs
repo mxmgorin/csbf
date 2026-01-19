@@ -17,9 +17,9 @@ public class EmitCmd : ICmd
 
     public void Execute(IContext ctx, string[] args)
     {
-        if (args.Length != 4)
+        if (args.Length != 3 && args.Length != 4)
         {
-            Console.WriteLine("usage: emit <lang> <in> <out>");
+            Console.WriteLine("usage: emit <lang> <in> [out]");
             return;
         }
 
@@ -34,8 +34,16 @@ public class EmitCmd : ICmd
         var ops = Parser.Parse(src);
         new Pipeline(codegen).Run(ops);
         var code = codegen.Emit();
-        File.WriteAllText(args[3], code);
 
-        Console.WriteLine($"emitted file: {args[3]}");
+        if (args.Length == 4)
+        {
+            File.WriteAllText(args[3], code);
+            Console.WriteLine($"emitted file: {args[3]}");
+        }
+        else
+        {
+            Console.WriteLine(code);
+        }
     }
+
 }
