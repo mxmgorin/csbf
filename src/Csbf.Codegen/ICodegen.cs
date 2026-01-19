@@ -6,6 +6,6 @@ public interface ICodegen
 {
     void OnOp(Op op);
     void OnBegin();
-    void OnEnd(ProgramAnalysis analysis);
-    string Flush();
+    void OnEnd(AnalysisResult analysis);
+    string Emit();
 }

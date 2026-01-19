@@ -9,14 +9,14 @@ public class RegsCmd : ICmd
 
     public void Execute(IContext ctx, string[] args)
     {
-        if (!ctx.Dbg.Vm.HasProgram())
+        if (!ctx.Debugger.Vm.HasProgram())
         {
             Console.WriteLine("no program loaded");
             return;
         }
 
-        App.PrintInt("IP", ctx.Dbg.Vm.Ip);
-        App.PrintInt("DP", ctx.Dbg.Vm.Dp);
-        App.PrintInt("CELL", ctx.Dbg.Vm.Current);
+        App.PrintInt("IP", ctx.Debugger.Vm.Ip);
+        App.PrintInt("DP", ctx.Debugger.Vm.Dp);
+        App.PrintInt("CELL", ctx.Debugger.Vm.Current);
     }
 }

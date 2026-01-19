@@ -4,7 +4,7 @@ namespace Csbf.Codegen;
 
 public sealed class Pipeline(params ICodegen[] gens)
 {
-    private readonly ProgramAnalysis _analysis = new();
+    private readonly Analyser _analyser = new();
 
     public void Run(IEnumerable<Op> ops)
     {
@@ -17,7 +17,7 @@ public sealed class Pipeline(params ICodegen[] gens)
 
         foreach (var s in gens)
         {
-            s.OnEnd(_analysis);
+            s.OnEnd(_analyser.GetResult());
         }
     }
 
@@ -25,15 +25,7 @@ public sealed class Pipeline(params ICodegen[] gens)
     {
         foreach (var op in ops)
         {
-            switch (op)
-            {
-                case Input:
-                    _analysis.UsesInput = true;
-                    break;
-                case Output:
-                    _analysis.UsesOutput = true;
-                    break;
-            }
+            _analyser.Process(op);
 
             foreach (var s in gens)
             {

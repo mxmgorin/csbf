@@ -22,7 +22,7 @@ public class LoadCmd : ICmd
 
         var ir = Parser.Parse(text);
         var vmOps = Lowering.Lower(ir);
-        ctx.Dbg.Vm.Load(vmOps);
+        ctx.Debugger.Vm.Load(vmOps);
         Console.WriteLine("program loaded");
     }
 }

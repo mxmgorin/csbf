@@ -7,13 +7,13 @@ public class StepCmd : ICmd
 
     public void Execute(IContext ctx, string[] args)
     {
-        if (!ctx.Dbg.Vm.HasProgram())
+        if (!ctx.Debugger.Vm.HasProgram())
         {
             Console.WriteLine("no program loaded");
             return;
         }
 
-        var op = ctx.Dbg.Vm.Peek();
+        var op = ctx.Debugger.Vm.Peek();
 
         if (op is null)
         {
@@ -21,8 +21,8 @@ public class StepCmd : ICmd
             return;
         }
 
-        var ip = ctx.Dbg.Vm.Ip;
-        ctx.Dbg.Vm.Step();
+        var ip = ctx.Debugger.Vm.Ip;
+        ctx.Debugger.Vm.Step();
         Console.WriteLine($"0x{ip:X}: {op}");
     }
 }

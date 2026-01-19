@@ -9,12 +9,12 @@ public class RunCmd : ICmd
 
     public void Execute(IContext ctx, string[] args)
     {
-        var res = ctx.Dbg.Debug();
+        var res = ctx.Debugger.Debug();
 
         switch (res)
         {
             case DebugResult.HitBreakpoint:
-                Console.WriteLine($"hit breakpoint at 0x{ctx.Dbg.Vm.Ip:X}");
+                Console.WriteLine($"hit breakpoint at 0x{ctx.Debugger.Vm.Ip:X}");
                 break;
             case DebugResult.Finished:
                 Console.WriteLine("\nprogram finished");

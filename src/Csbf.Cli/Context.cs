@@ -5,11 +5,10 @@ namespace Csbf.Cli;
 
 public interface IContext
 {
-    Debugger.Debugger Dbg { get; }
+    Debugger.Debugger Debugger { get; }
 }
 
 public class AppContext : IContext
 {
-    public Debugger.Debugger Dbg { get; } = new(new Vm(App.ReadByte, App.WriteByte));
-
+    public Debugger.Debugger Debugger { get; } = new(new Vm(App.ReadByte, App.WriteByte));
 }

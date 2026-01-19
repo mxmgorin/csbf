@@ -33,9 +33,9 @@ public class EmitCmd : ICmd
         var src = File.ReadAllText(args[2]);
         var ops = Parser.Parse(src);
         new Pipeline(codegen).Run(ops);
-        var code = codegen.Flush();
+        var code = codegen.Emit();
         File.WriteAllText(args[3], code);
 
-        Console.WriteLine($"emitted to {lang}: {args[3]}");
+        Console.WriteLine($"emitted file: {args[3]}");
     }
 }

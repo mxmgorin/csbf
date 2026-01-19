@@ -13,7 +13,7 @@ public class BreakCmd : ICmd
             return;
         }
 
-        Console.WriteLine(ctx.Dbg.AddBreakpoint(ip)
+        Console.WriteLine(ctx.Debugger.AddBreakpoint(ip)
             ? $"breakpoint set at 0x{ip:X} ({ip})"
             : $"breakpoint already exists at 0x{ip:X} ({ip})");
     }

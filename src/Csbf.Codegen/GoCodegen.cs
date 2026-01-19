@@ -7,7 +7,7 @@ public sealed class GoCodegen : ICodegen
 {
     private readonly StringBuilder _body = new();
     private int _indent = 1;
-    private ProgramAnalysis _analysis = new();
+    private AnalysisResult _analysis = new(false, false);
 
 
     public void OnBegin()
@@ -17,7 +17,7 @@ public sealed class GoCodegen : ICodegen
         _body.AppendLine("  dp := 0");
     }
 
-    public void OnEnd(ProgramAnalysis analysis)
+    public void OnEnd(AnalysisResult analysis)
     {
         _analysis = analysis;
         _body.AppendLine("}");
@@ -78,10 +78,24 @@ public sealed class GoCodegen : ICodegen
         }
     }
 
-    public string Flush()
+    public string Emit()
     {
         var sb = new StringBuilder();
+        
+        EmitHeader(sb);
+        sb.AppendLine();
 
+        if (_analysis.UsesInput)
+        {
+            sb.AppendLine("r := bufio.NewReader(os.Stdin)");
+        }
+
+        sb.Append(_body);
+        return sb.ToString();
+    }
+
+    private void EmitHeader(StringBuilder sb)
+    {
         sb.AppendLine("package main");
         sb.AppendLine();
         sb.AppendLine("import (");
@@ -98,12 +112,5 @@ public sealed class GoCodegen : ICodegen
         }
 
         sb.AppendLine(")");
-        sb.AppendLine();
-
-        if (_analysis.UsesInput)
-            sb.AppendLine("var r = bufio.NewReader(os.Stdin)");
-
-        sb.Append(_body);
-        return sb.ToString();
     }
 }
