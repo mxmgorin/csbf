@@ -16,3 +16,4 @@ It implements a full language pipeline:
 
 # References
 - [The language](https://www.muppetlabs.com/~breadbox/bf/)
+- [Basics of BrainFuck](https://gist.github.com/roachhd/dce54bec8ba55fb17d3a)
