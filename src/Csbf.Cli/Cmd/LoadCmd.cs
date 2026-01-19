@@ -30,6 +30,5 @@ public class LoadCmd : ICmd
         }
 
         ctx.Debugger.Vm.Load(src);
-        Console.WriteLine("program loaded");
     }
 }

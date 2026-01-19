@@ -67,7 +67,7 @@ public class Vm(Func<byte>? input = null, Action<byte>? output = null, int memor
             return;
         }
 
-        ref readonly var op = ref _ops[Ip];
+        var op = _ops[Ip];
         Execute(op);
 
         Ip++;

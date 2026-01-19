@@ -29,7 +29,6 @@ public class RunCmd : ICmd
                 Console.WriteLine($"hit breakpoint at 0x{ctx.Debugger.Vm.Ip:X}");
                 break;
             case DebugResult.Finished:
-                Console.WriteLine("\nprogram finished");
                 break;
             default:
                 throw new ArgumentOutOfRangeException();
