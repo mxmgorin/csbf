@@ -1,3 +1,6 @@
+[![CI](https://github.com/mxmgorin/csbf/actions/workflows/ci.yml/badge.svg)](https://github.com/mxmgorin/csbf/actions)
+
+
 # csbf
 `csbf` is a CLI tool for the Brainfuck language written in C#.
 It implements a full language pipeline:
