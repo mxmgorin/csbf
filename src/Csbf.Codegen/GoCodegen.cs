@@ -35,40 +35,39 @@ public sealed class GoCodegen : ICodegen
 
     private void EmitOp(Op op)
     {
-        switch (op)
+        switch (op.Kind)
         {
-            case IncPtr:
+            case OpKind.IncPtr:
                 EmitLine("dp++");
                 break;
 
-            case DecPtr:
+            case OpKind.DecPtr:
                 EmitLine("dp--");
                 break;
 
-            case IncByte:
+            case OpKind.IncByte:
                 EmitLine("mem[dp]++");
                 break;
 
-            case DecByte:
+            case OpKind.DecByte:
                 EmitLine("mem[dp]--");
                 break;
 
-            case Output:
+            case OpKind.Out:
                 EmitLine("fmt.Printf(\"%c\", mem[dp])");
                 break;
 
-            case Input:
+            case OpKind.In:
                 EmitLine("b, _ := r.ReadByte()");
                 EmitLine("mem[dp] = b");
                 break;
-
-            case Loop l:
+            
+            case OpKind.Jz:
                 EmitLine("for mem[dp] != 0 {");
                 _indent++;
-
-                foreach (var inner in l.Body)
-                    OnOp(inner);
-
+                break;
+            
+            case OpKind.Jnz:
                 _indent--;
                 EmitLine("}");
                 break;

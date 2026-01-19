@@ -2,85 +2,52 @@ namespace Csbf.Core;
 
 public static class Parser
 {
-    public sealed class ParseState
-    {
-        public int Index;
-        public int Limit;
-    }
 
-
-    public static IEnumerable<Op> Parse(string src)
+    public static IReadOnlyList<Op> Parse(string src)
     {
-        var state = new ParseState { Index = 0, Limit = src.Length };
-        return ParseBlock(src, state);
-    }
+        var ops = new List<Op>();
+        var loopStack = new Stack<int>();
 
-    internal static IEnumerable<Op> ParseBlock(string src, ParseState state)
-    {
-        while (state.Index < state.Limit)
+        foreach (var op in src)
         {
-            switch (src[state.Index])
+            switch (op)
             {
-                case '>':
-                    state.Index++;
-                    yield return new IncPtr();
-                    break;
-                case '<':
-                    state.Index++;
-                    yield return new DecPtr();
-                    break;
-                case '+':
-                    state.Index++;
-                    yield return new IncByte();
-                    break;
-                case '-':
-                    state.Index++;
-                    yield return new DecByte();
-                    break;
-                case '.':
-                    state.Index++;
-                    yield return new Output();
-                    break;
-                case ',':
-                    state.Index++;
-                    yield return new Input();
-                    break;
+                case '>': ops.Add(new Op(OpKind.IncPtr, 1)); break;
+                case '<': ops.Add(new Op(OpKind.DecPtr, 1)); break;
+                case '+': ops.Add(new Op(OpKind.IncByte, 1)); break;
+                case '-': ops.Add(new Op(OpKind.DecByte, 1)); break;
+                case '.': ops.Add(new Op(OpKind.Out, 0)); break;
+                case ',': ops.Add(new Op(OpKind.In, 0)); break;
 
                 case '[':
                 {
-                    var bodyStart = ++state.Index;
-                    var depth = 1;
-
-                    while (state.Index < state.Limit && depth > 0)
-                    {
-                        switch (src[state.Index])
-                        {
-                            case '[':
-                                depth++;
-                                break;
-                            case ']':
-                                depth--;
-                                break;
-                        }
-
-                        state.Index++;
-                    }
-
-                    if (depth != 0)
-                        throw new InvalidOperationException("Unclosed '['");
-
-                    var bodyEnd = state.Index - 1;
-                    yield return new Loop(src, bodyStart, bodyEnd);
+                    // Emit Jz with dummy target
+                    var jz = new Op(OpKind.Jz, -1);
+                    ops.Add(jz);
+                    loopStack.Push(ops.Count - 1);
                     break;
                 }
 
                 case ']':
-                    throw new InvalidOperationException("Unexpected closing bracket");
+                {
+                    if (loopStack.Count == 0)
+                    {
+                        throw new InvalidOperationException("Unexpected closing bracket");
+                    }
 
-                default:
-                    state.Index++;
+                    var openIndex = loopStack.Pop();
+
+                    // Emit Jnz back to the instruction after '['
+                    var jnz = new Op(OpKind.Jnz, openIndex);
+                    ops.Add(jnz);
+
+                    // Patch the earlier Jz to jump here (after Jnz)
+                    ops[openIndex] = new Op(OpKind.Jz, ops.Count);
                     break;
+                }
             }
         }
+
+        return loopStack.Count != 0 ? throw new InvalidOperationException("Unclosed '['") : ops;
     }
 }

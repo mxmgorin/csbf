@@ -4,7 +4,6 @@ namespace Csbf.Core.Tests;
 
 public class ParserTests
 {
-
     [Fact]
     public void Parse_ReturnsEmpty_ForEmptySource()
     {
@@ -12,58 +11,50 @@ public class ParserTests
 
         Assert.Empty(ops);
     }
-    
+
     [Fact]
     public void Parse_ParsesAllOps()
     {
         var ops = Parser.Parse("+-<>.,");
 
         Assert.Collection(ops,
-            op => Assert.IsType<IncByte>(op),
-            op => Assert.IsType<DecByte>(op),
-            op => Assert.IsType<DecPtr>(op),
-            op => Assert.IsType<IncPtr>(op),
-            op => Assert.IsType<Output>(op),
-            op => Assert.IsType<Input>(op)
+            op => Assert.Equal(OpKind.IncByte, op.Kind),
+            op => Assert.Equal(OpKind.DecByte, op.Kind),
+            op => Assert.Equal(OpKind.DecPtr, op.Kind),
+            op => Assert.Equal(OpKind.IncPtr, op.Kind),
+            op => Assert.Equal(OpKind.Out, op.Kind),
+            op => Assert.Equal(OpKind.In, op.Kind)
         );
     }
-    
+
     [Fact]
     public void Parse_ParsesLoop()
     {
-        var ops = Parser.Parse("[+-]");
+        var ops = Parser.Parse("[+]");
 
-        var loop = Assert.Single(ops) as Loop;
-        Assert.NotNull(loop);
-
-        Assert.Collection(loop.Body,
-            op => Assert.IsType<IncByte>(op),
-            op => Assert.IsType<DecByte>(op)
+        Assert.Collection(ops,
+            op => Assert.Equal(OpKind.Jz, op.Kind),
+            op => Assert.Equal(OpKind.IncByte, op.Kind),
+            op => Assert.Equal(OpKind.Jnz, op.Kind)
         );
     }
-    
+
     [Fact]
     public void Parse_ParsesNestedLoops()
     {
-        var ops = Parser.Parse("[+[--]]");
+        var ops = Parser.Parse("[+[-]]");
 
-        var outer = Assert.Single(ops) as Loop;
-        Assert.NotNull(outer);
-
-        Assert.Collection(outer.Body,
-            op => Assert.IsType<IncByte>(op),
-            op =>
-            {
-                var inner = Assert.IsType<Loop>(op);
-                Assert.Collection(inner.Body,
-                    x => Assert.IsType<DecByte>(x),
-                    x => Assert.IsType<DecByte>(x)
-                );
-            }
+        Assert.Collection(ops,
+            op => Assert.Equal(OpKind.Jz, op.Kind),
+            op => Assert.Equal(OpKind.IncByte, op.Kind),
+            op => Assert.Equal(OpKind.Jz, op.Kind),
+            op => Assert.Equal(OpKind.DecByte, op.Kind),
+            op => Assert.Equal(OpKind.Jnz, op.Kind),
+            op => Assert.Equal(OpKind.Jnz, op.Kind)
         );
     }
-    
-    
+
+
     [Fact]
     public void Parse_ThrowsOnUnexpectedClosingBracket()
     {

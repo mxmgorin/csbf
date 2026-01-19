@@ -1,32 +1,61 @@
 namespace Csbf.Core;
 
-public abstract record Op;
-
-public record IncPtr() : Op;
-public record DecPtr() : Op;
-public record IncByte() : Op;
-public record DecByte() : Op;
-public record Output() : Op;
-public record Input() : Op;
-public record Loop : Op
+public enum OpKind
 {
-    private readonly string _src;
-    private readonly int _start;
-    private readonly int _end;
+    /// <summary>
+    /// Increment the pointer.
+    /// </summary>
+    IncPtr,
 
-    public Loop(string src, int start, int end)
-    {
-        _src = src;
-        _start = start;
-        _end = end;
-    }
+    /// <summary>
+    /// Decrement the pointer.
+    /// </summary>
+    DecPtr,
 
-    public IEnumerable<Op> Body
-    {
-        get
+    /// <summary>
+    /// Increment the byte at the pointer.
+    /// </summary>
+    IncByte,
+
+    /// <summary>
+    /// Decrement the byte at the pointer.
+    /// </summary>
+    DecByte,
+
+    /// <summary>
+    /// Output the byte at the pointer.
+    /// </summary>
+    Out,
+
+    /// <summary>
+    /// Input a byte and store it in the byte at the pointer.
+    /// </summary>
+    In,
+
+    /// <summary>
+    /// Jump if zero
+    /// </summary>
+    Jz,
+
+    /// <summary>
+    /// Jump if non-zero
+    /// </summary>
+    Jnz
+}
+
+public readonly record struct Op(OpKind Kind, int Arg)
+{
+    public override string ToString()
+        => Kind switch
         {
-            var state = new Parser.ParseState { Index = _start, Limit = _end };
-            return Parser.ParseBlock(_src, state);
-        }
-    }
+            OpKind.IncPtr => "INC_PTR",
+            OpKind.DecPtr => "DEC_PTR",
+            OpKind.IncByte => "INC_BYTE",
+            OpKind.DecByte => "DEC_BYTE",
+            OpKind.Out => "OUT",
+            OpKind.In => "IN",
+            OpKind.Jz => $"JZ  0x{Arg:X}",
+            OpKind.Jnz => $"JNZ 0x{Arg:X}",
+            _ => Kind.ToString()
+        };
 }

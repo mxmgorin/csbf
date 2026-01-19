@@ -9,13 +9,13 @@ public class Vm(Func<byte>? input = null, Action<byte>? output = null, int memSi
     public int Dp { get; private set; }
 
     private readonly byte[] _mem = new byte[memSize];
-    private VmOp[] _program = [];
+    private Op[] _program = [];
 
     public byte Current => _mem[Dp];
 
-    public void Load(VmOp[] program)
+    public void Load(IReadOnlyCollection<Op> program)
     {
-        _program = program;
+        _program = program.ToArray();
     }
 
     public bool HasProgram()
@@ -37,7 +37,7 @@ public class Vm(Func<byte>? input = null, Action<byte>? output = null, int memSi
         return new ReadOnlySpan<byte>(_mem, (int)from, (int)(end - from));
     }
 
-    public VmOp? Peek()
+    public Op? Peek()
     {
         if (ProgramFinished())
             return null;
@@ -61,36 +61,36 @@ public class Vm(Func<byte>? input = null, Action<byte>? output = null, int memSi
         Ip++;
     }
 
-    private void Execute(VmOp op)
+    private void Execute(Op op)
     {
         switch (op.Kind)
         {
-            case VmOpKind.IncPtr:
+            case OpKind.IncPtr:
                 Dp++;
                 break;
-            case VmOpKind.DecPtr:
+            case OpKind.DecPtr:
                 Dp--;
                 break;
-            case VmOpKind.IncByte:
+            case OpKind.IncByte:
                 _mem[Dp]++;
                 break;
-            case VmOpKind.DecByte:
+            case OpKind.DecByte:
                 _mem[Dp]--;
                 break;
-            case VmOpKind.Out:
+            case OpKind.Out:
                 output?.Invoke(_mem[Dp]);
                 break;
-            case VmOpKind.In:
+            case OpKind.In:
                 _mem[Dp] = input?.Invoke() ?? 0;
                 break;
-            case VmOpKind.Jz:
+            case OpKind.Jz:
                 if (_mem[Dp] == 0)
                 {
                     Ip = op.Arg;
                 }
 
                 break;
-            case VmOpKind.Jnz:
+            case OpKind.Jnz:
                 if (_mem[Dp] != 0)
                 {
                     Ip = op.Arg;

@@ -20,9 +20,8 @@ public class LoadCmd : ICmd
 
         if (string.IsNullOrEmpty(text)) return;
 
-        var ir = Parser.Parse(text);
-        var vmOps = Lowering.Lower(ir);
-        ctx.Debugger.Vm.Load(vmOps);
+        var ops = Parser.Parse(text);
+        ctx.Debugger.Vm.Load(ops);
         Console.WriteLine("program loaded");
     }
 }

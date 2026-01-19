@@ -15,12 +15,12 @@ public class Analyser
 
     public void Process(Op op)
     {
-        switch (op)
+        switch (op.Kind)
         {
-            case Input:
+            case OpKind.In:
                 _usesInput = true;
                 break;
-            case Output:
+            case OpKind.Out:
                 _usesOutput = true;
                 break;
         }
