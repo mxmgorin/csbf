@@ -87,7 +87,7 @@ public sealed class GoCodegen : ICodegen
 
         if (_analysis.UsesInput)
         {
-            sb.AppendLine("r := bufio.NewReader(os.Stdin)");
+            sb.AppendLine("var r = bufio.NewReader(os.Stdin)");
         }
 
         sb.Append(_body);

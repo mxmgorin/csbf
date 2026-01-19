@@ -28,6 +28,6 @@ public class Analyser
 
     public AnalysisResult GetResult()
     {
-        return new AnalysisResult(_usesInput, _usesOutput);
+        return new AnalysisResult(_usesOutput, _usesInput);
     }
 }
