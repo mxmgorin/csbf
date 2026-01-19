@@ -28,9 +28,9 @@ public sealed class GoCodegen : ICodegen
         EmitOp(op);
     }
 
-    private void EmitLine(string s)
+    private void EmitLine(string op, string arg = "")
     {
-        _body.AppendLine(new string(' ', _indent * 2) + s);
+        _body.AppendLine(new string(' ', _indent * 2) + op + arg);
     }
 
     private void EmitOp(Op op)
@@ -38,19 +38,19 @@ public sealed class GoCodegen : ICodegen
         switch (op.Kind)
         {
             case OpKind.IncPtr:
-                EmitLine("dp++");
+                EmitLine("dp+=", op.Arg.ToString());
                 break;
 
             case OpKind.DecPtr:
-                EmitLine("dp--");
+                EmitLine("dp-=", op.Arg.ToString());
                 break;
 
             case OpKind.IncByte:
-                EmitLine("mem[dp]++");
+                EmitLine("mem[dp]+=", op.Arg.ToString());
                 break;
 
             case OpKind.DecByte:
-                EmitLine("mem[dp]--");
+                EmitLine("mem[dp]-=", op.Arg.ToString());
                 break;
 
             case OpKind.Out:

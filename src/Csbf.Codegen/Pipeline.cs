@@ -13,7 +13,7 @@ public sealed class Pipeline(params ICodegen[] gens)
             s.OnBegin();
         }
 
-        Walk(ops);
+        Walk(Optimizer.Optimize(ops));
 
         foreach (var s in gens)
         {

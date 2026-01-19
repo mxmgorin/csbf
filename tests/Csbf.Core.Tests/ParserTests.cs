@@ -1,6 +1,4 @@
-﻿using Xunit.Abstractions;
-
-namespace Csbf.Core.Tests;
+﻿namespace Csbf.Core.Tests;
 
 public class ParserTests
 {
