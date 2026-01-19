@@ -38,19 +38,19 @@ public sealed class GoCodegen : ICodegen
         switch (op.Kind)
         {
             case OpKind.IncPtr:
-                EmitLine("dp+=", op.Arg.ToString());
+                EmitLine("dp += ", op.Arg.ToString());
                 break;
 
             case OpKind.DecPtr:
-                EmitLine("dp-=", op.Arg.ToString());
+                EmitLine("dp -= ", op.Arg.ToString());
                 break;
 
             case OpKind.IncByte:
-                EmitLine("mem[dp]+=", op.Arg.ToString());
+                EmitLine("mem[dp] += ", op.Arg.ToString());
                 break;
 
             case OpKind.DecByte:
-                EmitLine("mem[dp]-=", op.Arg.ToString());
+                EmitLine("mem[dp] -= ", op.Arg.ToString());
                 break;
 
             case OpKind.Out:
