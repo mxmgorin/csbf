@@ -44,7 +44,6 @@ public sealed class App
             return File.ReadAllText(path);
         }
 
-        Console.WriteLine($"File not found: {path}");
         return string.Empty;
     }
 

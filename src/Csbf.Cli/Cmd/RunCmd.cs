@@ -12,13 +12,7 @@ public class RunCmd : ICmd
         if (args.Length >= 2)
         {
             var path = args[1];
-            var src = App.ReadFile(path);
-
-            if (!string.IsNullOrEmpty(src))
-            {
-                ctx.Debugger.Vm.Load(src);
-                Console.WriteLine("program loaded");
-            }
+            LoadCmd.Load(ctx, path);
         }
 
         if (!ctx.Debugger.Vm.Loaded())

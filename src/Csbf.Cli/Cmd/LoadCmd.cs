@@ -16,10 +16,16 @@ public class LoadCmd : ICmd
         }
 
         var path = args[1];
+        Load(ctx, path);
+    }
+
+    public static void Load(IContext ctx, string path)
+    {
         var src = App.ReadFile(path);
 
         if (string.IsNullOrEmpty(src))
         {
+            Console.WriteLine($"File not found: {path}");
             return;
         }
 
