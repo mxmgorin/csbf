@@ -16,12 +16,14 @@ public class LoadCmd : ICmd
         }
 
         var path = args[1];
-        var text = App.ReadFile(path);
+        var src = App.ReadFile(path);
 
-        if (string.IsNullOrEmpty(text)) return;
+        if (string.IsNullOrEmpty(src))
+        {
+            return;
+        }
 
-        var ops = Parser.Parse(text);
-        ctx.Debugger.Vm.Load(ops);
+        ctx.Debugger.Vm.Load(src);
         Console.WriteLine("program loaded");
     }
 }

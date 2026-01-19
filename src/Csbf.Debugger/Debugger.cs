@@ -18,7 +18,7 @@ public sealed class Debugger(Vm vm)
 
     public DebugResult Debug()
     {
-        while (!Vm.ProgramFinished())
+        while (!Vm.Halted())
         {
             if (_breakpoints.Contains(Vm.Ip)) return DebugResult.HitBreakpoint;
 

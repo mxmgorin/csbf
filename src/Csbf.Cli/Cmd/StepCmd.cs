@@ -7,7 +7,7 @@ public class StepCmd : ICmd
 
     public void Execute(IContext ctx, string[] args)
     {
-        if (!ctx.Debugger.Vm.HasProgram())
+        if (!ctx.Debugger.Vm.Loaded())
         {
             Console.WriteLine("no program loaded");
             return;

@@ -1,6 +1,6 @@
 ﻿namespace Csbf.Core;
 
-public class Vm(Func<byte>? input = null, Action<byte>? output = null, int memSize = 30_000)
+public class Vm(Func<byte>? input = null, Action<byte>? output = null, int memorySize = 30_000)
 {
     /// Instruction pointer
     public int Ip { get; private set; }
@@ -8,54 +8,66 @@ public class Vm(Func<byte>? input = null, Action<byte>? output = null, int memSi
     /// data pointer
     public int Dp { get; private set; }
 
-    private readonly byte[] _mem = new byte[memSize];
-    private Op[] _program = [];
+    private readonly byte[] _memory = new byte[memorySize];
+    private Op[] _ops = [];
 
-    public byte Current => _mem[Dp];
+    public byte Current => _memory[Dp];
 
-    public void Load(IReadOnlyCollection<Op> program)
+    public void Load(IReadOnlyCollection<Op> ops)
     {
-        _program = program.ToArray();
+        _ops = ops.ToArray();
     }
 
-    public bool HasProgram()
+    public void Load(string src)
     {
-        return _program.Length != 0;
-    }
-
-    public bool ProgramFinished()
-    {
-        return Ip >= _program.Length;
-    }
-
-    public ReadOnlySpan<byte> Read(uint from, uint len)
-    {
-        if (from >= _mem.Length)
-            throw new ArgumentOutOfRangeException(nameof(from));
-
-        var end = Math.Min(from + len, _mem.Length);
-        return new ReadOnlySpan<byte>(_mem, (int)from, (int)(end - from));
-    }
-
-    public Op? Peek()
-    {
-        if (ProgramFinished())
-            return null;
-
-        if (Ip < 0 || Ip >= _program.Length)
-            return null;
-
-        return _program[Ip];
-    }
-
-    public void Step()
-    {
-        if (ProgramFinished())
+        if (string.IsNullOrEmpty(src))
         {
             return;
         }
 
-        ref readonly var op = ref _program[Ip];
+        var ops = Parser.Parse(src);
+        Load(ops);
+    }
+
+    public bool Loaded()
+    {
+        return _ops.Length != 0;
+    }
+
+    public bool Halted()
+    {
+        return Ip >= _ops.Length;
+    }
+
+    public ReadOnlySpan<byte> ReadMemory(uint from, uint len)
+    {
+        if (from >= _memory.Length)
+            throw new ArgumentOutOfRangeException(nameof(from));
+
+        var end = Math.Min(from + len, _memory.Length);
+        return new ReadOnlySpan<byte>(_memory, (int)from, (int)(end - from));
+    }
+
+
+    public Op? Peek()
+    {
+        if (Halted())
+            return null;
+
+        if (Ip < 0 || Ip >= _ops.Length)
+            return null;
+
+        return _ops[Ip];
+    }
+
+    public void Step()
+    {
+        if (Halted())
+        {
+            return;
+        }
+
+        ref readonly var op = ref _ops[Ip];
         Execute(op);
 
         Ip++;
@@ -72,26 +84,26 @@ public class Vm(Func<byte>? input = null, Action<byte>? output = null, int memSi
                 Dp--;
                 break;
             case OpKind.IncByte:
-                _mem[Dp]++;
+                _memory[Dp]++;
                 break;
             case OpKind.DecByte:
-                _mem[Dp]--;
+                _memory[Dp]--;
                 break;
             case OpKind.Out:
-                output?.Invoke(_mem[Dp]);
+                output?.Invoke(_memory[Dp]);
                 break;
             case OpKind.In:
-                _mem[Dp] = input?.Invoke() ?? 0;
+                _memory[Dp] = input?.Invoke() ?? 0;
                 break;
             case OpKind.Jz:
-                if (_mem[Dp] == 0)
+                if (_memory[Dp] == 0)
                 {
                     Ip = op.Arg;
                 }
 
                 break;
             case OpKind.Jnz:
-                if (_mem[Dp] != 0)
+                if (_memory[Dp] != 0)
                 {
                     Ip = op.Arg;
                 }

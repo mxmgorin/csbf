@@ -7,7 +7,7 @@ public class MemCmd : ICmd
 
     public void Execute(IContext ctx, string[] args)
     {
-        if (!ctx.Debugger.Vm.HasProgram())
+        if (!ctx.Debugger.Vm.Loaded())
         {
             Console.WriteLine("no program loaded");
             return;
@@ -24,7 +24,7 @@ public class MemCmd : ICmd
         ReadOnlySpan<byte> span;
         try
         {
-            span = ctx.Debugger.Vm.Read(from, len);
+            span = ctx.Debugger.Vm.ReadMemory(from, len);
         }
         catch (ArgumentOutOfRangeException)
         {

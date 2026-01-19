@@ -9,6 +9,24 @@ public class RunCmd : ICmd
 
     public void Execute(IContext ctx, string[] args)
     {
+        if (args.Length >= 2)
+        {
+            var path = args[1];
+            var src = App.ReadFile(path);
+
+            if (!string.IsNullOrEmpty(src))
+            {
+                ctx.Debugger.Vm.Load(src);
+                Console.WriteLine("program loaded");
+            }
+        }
+
+        if (!ctx.Debugger.Vm.Loaded())
+        {
+            Console.WriteLine("no program loaded");
+            return;
+        }
+
         var res = ctx.Debugger.Debug();
 
         switch (res)
