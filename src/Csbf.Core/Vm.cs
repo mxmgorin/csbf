@@ -12,6 +12,8 @@ public class Vm(Func<byte>? input = null, Action<byte>? output = null, int memor
     private Op[] _ops = [];
 
     public byte Current => _memory[Dp];
+    
+    public Op[] Ops => _ops;
 
     public void Load(IReadOnlyCollection<Op> ops)
     {
@@ -70,7 +72,6 @@ public class Vm(Func<byte>? input = null, Action<byte>? output = null, int memor
         var op = _ops[Ip];
         Execute(op);
 
-        Ip++;
     }
 
     private void Execute(Op op)
@@ -99,6 +100,7 @@ public class Vm(Func<byte>? input = null, Action<byte>? output = null, int memor
                 if (_memory[Dp] == 0)
                 {
                     Ip = op.Arg;
+                    return;
                 }
 
                 break;
@@ -106,11 +108,14 @@ public class Vm(Func<byte>? input = null, Action<byte>? output = null, int memor
                 if (_memory[Dp] != 0)
                 {
                     Ip = op.Arg;
+                    return;
                 }
 
                 break;
             default:
                 throw new ArgumentOutOfRangeException();
         }
+        
+        Ip++;
     }
 }
