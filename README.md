@@ -18,3 +18,5 @@ It implements a full language pipeline:
 - [The language](https://www.muppetlabs.com/~breadbox/bf/)
 - [Basics of BrainFuck](https://gist.github.com/roachhd/dce54bec8ba55fb17d3a)
 - [Wiki](https://en.wikipedia.org/wiki/Brainfuck)
+- [Brainfuck Online](https://copy.sh/brainfuck/)
+- [Brainfuck Programs](https://brainfuck.org/)
