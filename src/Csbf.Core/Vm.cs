@@ -2,23 +2,21 @@
 
 public class Vm(Func<byte>? input = null, Action<byte>? output = null, int memorySize = 30_000)
 {
+    /// <summary>
     /// Instruction pointer
+    /// </summary>
     public int Ip { get; private set; }
 
-    /// data pointer
+    /// <summary>
+    /// Data pointer
+    /// </summary>
     public int Dp { get; private set; }
+    
+    public byte Current => _memory[Dp];
+
+    public Op[] Ops { get; private set; } = [];
 
     private readonly byte[] _memory = new byte[memorySize];
-    private Op[] _ops = [];
-
-    public byte Current => _memory[Dp];
-    
-    public Op[] Ops => _ops;
-
-    public void Load(IReadOnlyCollection<Op> ops)
-    {
-        _ops = ops.ToArray();
-    }
 
     public void Load(string src)
     {
@@ -33,20 +31,23 @@ public class Vm(Func<byte>? input = null, Action<byte>? output = null, int memor
 
     public bool Loaded()
     {
-        return _ops.Length != 0;
+        return Ops.Length != 0;
     }
 
     public bool Halted()
     {
-        return Ip >= _ops.Length;
+        return Ip >= Ops.Length;
     }
 
     public ReadOnlySpan<byte> ReadMemory(uint from, uint len)
     {
         if (from >= _memory.Length)
+        {
             throw new ArgumentOutOfRangeException(nameof(from));
+        }
 
         var end = Math.Min(from + len, _memory.Length);
+
         return new ReadOnlySpan<byte>(_memory, (int)from, (int)(end - from));
     }
 
@@ -54,12 +55,16 @@ public class Vm(Func<byte>? input = null, Action<byte>? output = null, int memor
     public Op? Peek()
     {
         if (Halted())
+        {
             return null;
+        }
 
-        if (Ip < 0 || Ip >= _ops.Length)
+        if (!Loaded())
+        {
             return null;
+        }
 
-        return _ops[Ip];
+        return Ops[Ip];
     }
 
     public void Step()
@@ -69,9 +74,13 @@ public class Vm(Func<byte>? input = null, Action<byte>? output = null, int memor
             return;
         }
 
-        var op = _ops[Ip];
+        var op = Ops[Ip];
         Execute(op);
+    }
 
+    private void Load(IReadOnlyCollection<Op> ops)
+    {
+        Ops = ops.ToArray();
     }
 
     private void Execute(Op op)
@@ -113,9 +122,9 @@ public class Vm(Func<byte>? input = null, Action<byte>? output = null, int memor
 
                 break;
             default:
-                throw new ArgumentOutOfRangeException();
+                throw new InvalidOperationException("Unsupported OpKind");
         }
-        
+
         Ip++;
     }
 }

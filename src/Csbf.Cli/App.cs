@@ -47,16 +47,16 @@ public sealed class App
         return string.Empty;
     }
 
-    public static void PrintInt(string label, int value)
-    {
-        Console.WriteLine($"{label}: 0x{value:X} ({value})");
-    }
+
 
     public static byte ReadByte()
     {
         var ch = Console.Read();
+
         if (ch < 0)
+        {
             return 0; // EOF == 0 is conventional in BF
+        }
 
         return (byte)ch;
     }

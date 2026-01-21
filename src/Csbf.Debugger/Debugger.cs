@@ -27,4 +27,16 @@ public sealed class Debugger(Vm vm)
 
         return DebugResult.Finished;
     }
+
+    public void PrintRegs()
+    {
+        PrintInt("IP", Vm.Ip);
+        PrintInt("DP", Vm.Dp);
+        PrintInt("CELL", Vm.Current);
+    }
+
+    private static void PrintInt(string label, int value)
+    {
+        Console.WriteLine($"{label}: 0x{value:X}");
+    }
 }

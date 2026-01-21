@@ -15,8 +15,6 @@ public class RegsCmd : ICmd
             return;
         }
 
-        App.PrintInt("IP", ctx.Debugger.Vm.Ip);
-        App.PrintInt("DP", ctx.Debugger.Vm.Dp);
-        App.PrintInt("CELL", ctx.Debugger.Vm.Current);
+        ctx.Debugger.PrintRegs();
     }
 }
