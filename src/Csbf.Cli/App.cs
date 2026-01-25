@@ -1,11 +1,10 @@
 using Csbf.Core;
-using Csbf.Debugger;
 
 namespace Csbf.Cli;
 
 public sealed class App
 {
-    private readonly IContext _ctx = new AppContext();
+    private readonly IContext _ctx = new AppContext(new Vm(new ConsoleIo()));
     private readonly Dispatcher _dispatcher = new();
 
     public void ExecuteCmd(string[] args)
@@ -20,49 +19,13 @@ public sealed class App
             Console.Write("> ");
             var line = Console.ReadLine();
 
-            if (line is null) break;
+            if (line is null)
+            {
+                break;
+            }
 
             var parts = line.Split(' ', StringSplitOptions.RemoveEmptyEntries);
             _dispatcher.Dispatch(_ctx, parts);
         }
-    }
-
-    public static string ReadFile(string path)
-    {
-        // Try relative to current working directory
-        var relative = Path.GetFullPath(path);
-
-        if (File.Exists(relative))
-        {
-            return File.ReadAllText(relative);
-        }
-
-        // If the user already provided an absolute path, or the relative lookup failed,
-        // try the path as-is
-        if (Path.IsPathRooted(path) && File.Exists(path))
-        {
-            return File.ReadAllText(path);
-        }
-
-        return string.Empty;
-    }
-
-
-
-    public static byte ReadByte()
-    {
-        var ch = Console.Read();
-
-        if (ch < 0)
-        {
-            return 0; // EOF == 0 is conventional in BF
-        }
-
-        return (byte)ch;
-    }
-
-    public static void WriteByte(byte b)
-    {
-        Console.Write((char)b);
     }
 }

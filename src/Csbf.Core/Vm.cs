@@ -1,6 +1,6 @@
 ﻿namespace Csbf.Core;
 
-public class Vm(Func<byte>? input = null, Action<byte>? output = null, int memorySize = 30_000)
+public class Vm(IVmIo? io = null, int memorySize = 30_000)
 {
     /// <summary>
     /// Instruction pointer
@@ -11,7 +11,7 @@ public class Vm(Func<byte>? input = null, Action<byte>? output = null, int memor
     /// Data pointer
     /// </summary>
     public int Dp { get; private set; }
-    
+
     public byte Current => _memory[Dp];
 
     public Op[] Ops { get; private set; } = [];
@@ -100,10 +100,10 @@ public class Vm(Func<byte>? input = null, Action<byte>? output = null, int memor
                 _memory[Dp] -= (byte)op.Arg;
                 break;
             case OpKind.Out:
-                output?.Invoke(_memory[Dp]);
+                io?.Write(_memory[Dp]);
                 break;
             case OpKind.In:
-                _memory[Dp] = input?.Invoke() ?? 0;
+                _memory[Dp] = io?.Read() ?? 0;
                 break;
             case OpKind.Jz:
                 if (_memory[Dp] == 0)

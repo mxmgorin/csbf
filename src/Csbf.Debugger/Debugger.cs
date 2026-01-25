@@ -11,7 +11,7 @@ public enum DebugResult
 public sealed class Debugger(Vm vm)
 {
     private readonly HashSet<int> _breakpoints = [];
-    public Vm Vm { get; private set; } = vm;
+    public Vm Vm { get; } = vm;
 
     public bool AddBreakpoint(int ip) => _breakpoints.Add(ip);
     public bool RemoveBreakpoint(int ip) => _breakpoints.Remove(ip);
@@ -20,7 +20,10 @@ public sealed class Debugger(Vm vm)
     {
         while (!Vm.Halted())
         {
-            if (_breakpoints.Contains(Vm.Ip)) return DebugResult.HitBreakpoint;
+            if (_breakpoints.Contains(Vm.Ip))
+            {
+                return DebugResult.HitBreakpoint;
+            }
 
             Vm.Step();
         }

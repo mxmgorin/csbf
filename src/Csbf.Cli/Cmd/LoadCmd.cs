@@ -21,7 +21,7 @@ public class LoadCmd : ICmd
 
     public static void Load(IContext ctx, string path)
     {
-        var src = App.ReadFile(path);
+        var src = ReadFile(path);
 
         if (string.IsNullOrEmpty(src))
         {
@@ -30,5 +30,25 @@ public class LoadCmd : ICmd
         }
 
         ctx.Debugger.Vm.Load(src);
+    }
+
+    private static string ReadFile(string path)
+    {
+        // Try relative to current working directory
+        var relative = Path.GetFullPath(path);
+
+        if (File.Exists(relative))
+        {
+            return File.ReadAllText(relative);
+        }
+
+        // If the user already provided an absolute path, or the relative lookup failed,
+        // try the path as-is
+        if (Path.IsPathRooted(path) && File.Exists(path))
+        {
+            return File.ReadAllText(path);
+        }
+
+        return string.Empty;
     }
 }

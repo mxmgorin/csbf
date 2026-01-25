@@ -31,7 +31,9 @@ public class Dispatcher
     public void Dispatch(IContext ctx, string[] args)
     {
         if (args.Length == 0)
+        {
             return;
+        }
 
         if (_cmds.TryGetValue(args[0], out var cmd))
         {
