@@ -1,5 +1,6 @@
 using System.Reflection;
 using Csbf.Cli.Cmd;
+using Csbf.Core;
 
 namespace Csbf.Cli;
 
@@ -37,7 +38,14 @@ public class Dispatcher
 
         if (_cmds.TryGetValue(args[0], out var cmd))
         {
-            cmd.Execute(ctx, args);
+            try
+            {
+                cmd.Execute(ctx, args);
+            }
+            catch (BrainfuckRuntimeException ex)
+            {
+                Console.WriteLine($"runtime error: {ex.Message}");
+            }
         }
         else
         {

@@ -88,10 +88,10 @@ public class Vm(IVmIo? io = null, int memorySize = 30_000)
         switch (op.Kind)
         {
             case OpKind.IncPtr:
-                Dp += op.Arg;
+                MovePointer(op.Arg);
                 break;
             case OpKind.DecPtr:
-                Dp -= op.Arg;
+                MovePointer(-op.Arg);
                 break;
             case OpKind.IncByte:
                 _memory[Dp] += (byte)op.Arg;
@@ -126,5 +126,18 @@ public class Vm(IVmIo? io = null, int memorySize = 30_000)
         }
 
         Ip++;
+    }
+
+    private void MovePointer(int delta)
+    {
+        var target = Dp + delta;
+
+        if (target < 0 || target >= _memory.Length)
+        {
+            throw new BrainfuckRuntimeException(
+                $"Data pointer moved out of bounds to {target} (tape size {_memory.Length}) at instruction 0x{Ip:X}.");
+        }
+
+        Dp = target;
     }
 }
