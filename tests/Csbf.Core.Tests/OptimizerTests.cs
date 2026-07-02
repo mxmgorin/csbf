@@ -5,12 +5,21 @@ public class OptimizerTests
     [Fact]
     public void Peephole_CollapsesDec()
     {
-        var src = new[] { new Op(OpKind.DecByte, 1), new Op(OpKind.DecByte, 1) };
+        var src = new[] { new Op(OpKind.AddByte, -1), new Op(OpKind.AddByte, -1) };
         var ops = Optimizer.Optimize(src);
 
         var op = Assert.Single(ops);
-        Assert.Equal(OpKind.DecByte, op.Kind);
-        Assert.Equal(2, op.Arg);
+        Assert.Equal(OpKind.AddByte, op.Kind);
+        Assert.Equal(-2, op.Arg);
+    }
+
+    [Fact]
+    public void Peephole_CancelsOpposingRuns()
+    {
+        // Signed ops let opposing moves cancel: "><" and "+-" both net to zero.
+        var ops = Optimizer.Optimize(Parser.Parse("><+-"));
+
+        Assert.Empty(ops);
     }
 
     [Fact]
@@ -21,12 +30,12 @@ public class OptimizerTests
         var ops = Optimizer.Optimize(Parser.Parse("+++[>+<-]"));
 
         Assert.Collection(ops,
-            o => { Assert.Equal(OpKind.IncByte, o.Kind); Assert.Equal(3, o.Arg); },
+            o => { Assert.Equal(OpKind.AddByte, o.Kind); Assert.Equal(3, o.Arg); },
             o => { Assert.Equal(OpKind.Jz, o.Kind); Assert.Equal(7, o.Arg); },   // exit -> past end
-            o => Assert.Equal(OpKind.IncPtr, o.Kind),
-            o => Assert.Equal(OpKind.IncByte, o.Kind),
-            o => Assert.Equal(OpKind.DecPtr, o.Kind),
-            o => Assert.Equal(OpKind.DecByte, o.Kind),
+            o => { Assert.Equal(OpKind.AddPtr, o.Kind); Assert.Equal(1, o.Arg); },
+            o => { Assert.Equal(OpKind.AddByte, o.Kind); Assert.Equal(1, o.Arg); },
+            o => { Assert.Equal(OpKind.AddPtr, o.Kind); Assert.Equal(-1, o.Arg); },
+            o => { Assert.Equal(OpKind.AddByte, o.Kind); Assert.Equal(-1, o.Arg); },
             o => { Assert.Equal(OpKind.Jnz, o.Kind); Assert.Equal(1, o.Arg); }); // back -> the Jz
     }
 }

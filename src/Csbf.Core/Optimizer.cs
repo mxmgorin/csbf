@@ -17,8 +17,7 @@ public static class Optimizer
         {
             var op = ops[i];
 
-            if (op.Kind is OpKind.IncPtr or OpKind.DecPtr
-                or OpKind.IncByte or OpKind.DecByte)
+            if (op.Kind is OpKind.AddPtr or OpKind.AddByte)
             {
                 var accum = op.Arg;
                 var j = i + 1;

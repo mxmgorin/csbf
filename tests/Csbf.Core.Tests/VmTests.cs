@@ -53,9 +53,20 @@ public class VmTests
     public void Step_Throws_WhenPointerGoesBelowZero()
     {
         var vm = new Vm(memorySize: 8);
-        vm.Load("<"); // DecPtr: 0 -> -1
+        vm.Load("<"); // AddPtr(-1): 0 -> -1
 
         Assert.Throws<BrainfuckRuntimeException>(() => vm.Step());
+    }
+
+    [Fact]
+    public void Step_WrapsByte_OnDecrementBelowZero()
+    {
+        var vm = new Vm();
+        vm.Load("-"); // AddByte(-1): 0 -> 255
+
+        vm.Step();
+
+        Assert.Equal((byte)255, vm.ReadMemory(0, 1)[0]);
     }
 
     [Fact]

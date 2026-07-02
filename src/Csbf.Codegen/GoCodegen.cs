@@ -37,20 +37,23 @@ public sealed class GoCodegen : ICodegen
     {
         switch (op.Kind)
         {
-            case OpKind.IncPtr:
+            case OpKind.AddPtr:
+                // dp is an int, so a negative delta compiles fine.
                 EmitLine("dp += ", op.Arg.ToString());
                 break;
 
-            case OpKind.DecPtr:
-                EmitLine("dp -= ", op.Arg.ToString());
-                break;
+            case OpKind.AddByte:
+                // mem[dp] is a byte; a negative untyped constant would overflow it,
+                // so emit a subtraction instead (both wrap mod 256 in Go).
+                if (op.Arg >= 0)
+                {
+                    EmitLine("mem[dp] += ", op.Arg.ToString());
+                }
+                else
+                {
+                    EmitLine("mem[dp] -= ", (-op.Arg).ToString());
+                }
 
-            case OpKind.IncByte:
-                EmitLine("mem[dp] += ", op.Arg.ToString());
-                break;
-
-            case OpKind.DecByte:
-                EmitLine("mem[dp] -= ", op.Arg.ToString());
                 break;
 
             case OpKind.Out:

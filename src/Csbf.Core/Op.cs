@@ -3,24 +3,14 @@ namespace Csbf.Core;
 public enum OpKind
 {
     /// <summary>
-    /// Increment the pointer.
+    /// Add a signed delta to the data pointer (<c>&gt;</c> = +1, <c>&lt;</c> = -1).
     /// </summary>
-    IncPtr,
+    AddPtr,
 
     /// <summary>
-    /// Decrement the pointer.
+    /// Add a signed delta to the byte at the data pointer (<c>+</c> = +1, <c>-</c> = -1).
     /// </summary>
-    DecPtr,
-
-    /// <summary>
-    /// Increment the byte at the pointer.
-    /// </summary>
-    IncByte,
-
-    /// <summary>
-    /// Decrement the byte at the pointer.
-    /// </summary>
-    DecByte,
+    AddByte,
 
     /// <summary>
     /// Output the byte at the pointer.
@@ -48,10 +38,8 @@ public readonly record struct Op(OpKind Kind, int Arg)
     public override string ToString()
         => Kind switch
         {
-            OpKind.IncPtr => "INC_PTR",
-            OpKind.DecPtr => "DEC_PTR",
-            OpKind.IncByte => "INC_BYTE",
-            OpKind.DecByte => "DEC_BYTE",
+            OpKind.AddPtr => $"ADD_PTR {Arg}",
+            OpKind.AddByte => $"ADD_BYTE {Arg}",
             OpKind.Out => "OUT",
             OpKind.In => "IN",
             OpKind.Jz => $"JZ  0x{Arg:X}",

@@ -5,15 +5,29 @@ namespace Csbf.Codegen.Tests;
 public class GoCodegenTests
 {
     [Fact]
-    public void EmitOp_EmitsIncPtr()
+    public void EmitOp_EmitsAddPtr()
     {
         var codegen = new GoCodegen();
         codegen.OnBegin();
-        codegen.OnOp(new Op(OpKind.IncPtr, 2));
+        codegen.OnOp(new Op(OpKind.AddPtr, 2));
         codegen.OnEnd(new AnalysisResult(false, false));
 
         var code = codegen.Emit();
 
         Assert.Equal("package main\n\n\nfunc main() {\n  mem := make([]byte, 30000)\n  dp := 0\n  dp += 2\n}\n", code);
+    }
+
+    [Fact]
+    public void EmitOp_EmitsNegativeAddByte_AsSubtraction()
+    {
+        // A negative constant would overflow Go's byte, so it must be a subtraction.
+        var codegen = new GoCodegen();
+        codegen.OnBegin();
+        codegen.OnOp(new Op(OpKind.AddByte, -3));
+        codegen.OnEnd(new AnalysisResult(false, false));
+
+        var code = codegen.Emit();
+
+        Assert.Equal("package main\n\n\nfunc main() {\n  mem := make([]byte, 30000)\n  dp := 0\n  mem[dp] -= 3\n}\n", code);
     }
 }

@@ -16,10 +16,10 @@ public class ParserTests
         var ops = Parser.Parse("+-<>.,");
 
         Assert.Collection(ops,
-            op => Assert.Equal(OpKind.IncByte, op.Kind),
-            op => Assert.Equal(OpKind.DecByte, op.Kind),
-            op => Assert.Equal(OpKind.DecPtr, op.Kind),
-            op => Assert.Equal(OpKind.IncPtr, op.Kind),
+            op => { Assert.Equal(OpKind.AddByte, op.Kind); Assert.Equal(1, op.Arg); },
+            op => { Assert.Equal(OpKind.AddByte, op.Kind); Assert.Equal(-1, op.Arg); },
+            op => { Assert.Equal(OpKind.AddPtr, op.Kind); Assert.Equal(-1, op.Arg); },
+            op => { Assert.Equal(OpKind.AddPtr, op.Kind); Assert.Equal(1, op.Arg); },
             op => Assert.Equal(OpKind.Out, op.Kind),
             op => Assert.Equal(OpKind.In, op.Kind)
         );
@@ -32,7 +32,7 @@ public class ParserTests
 
         Assert.Collection(ops,
             op => Assert.Equal(OpKind.Jz, op.Kind),
-            op => Assert.Equal(OpKind.IncByte, op.Kind),
+            op => Assert.Equal(OpKind.AddByte, op.Kind),
             op => Assert.Equal(OpKind.Jnz, op.Kind)
         );
     }
@@ -44,9 +44,9 @@ public class ParserTests
 
         Assert.Collection(ops,
             op => Assert.Equal(OpKind.Jz, op.Kind),
-            op => Assert.Equal(OpKind.IncByte, op.Kind),
+            op => Assert.Equal(OpKind.AddByte, op.Kind),
             op => Assert.Equal(OpKind.Jz, op.Kind),
-            op => Assert.Equal(OpKind.DecByte, op.Kind),
+            op => Assert.Equal(OpKind.AddByte, op.Kind),
             op => Assert.Equal(OpKind.Jnz, op.Kind),
             op => Assert.Equal(OpKind.Jnz, op.Kind)
         );

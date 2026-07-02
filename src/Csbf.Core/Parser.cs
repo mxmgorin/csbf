@@ -11,10 +11,10 @@ public static class Parser
         {
             switch (op)
             {
-                case '>': ops.Add(new Op(OpKind.IncPtr, 1)); break;
-                case '<': ops.Add(new Op(OpKind.DecPtr, 1)); break;
-                case '+': ops.Add(new Op(OpKind.IncByte, 1)); break;
-                case '-': ops.Add(new Op(OpKind.DecByte, 1)); break;
+                case '>': ops.Add(new Op(OpKind.AddPtr, 1)); break;
+                case '<': ops.Add(new Op(OpKind.AddPtr, -1)); break;
+                case '+': ops.Add(new Op(OpKind.AddByte, 1)); break;
+                case '-': ops.Add(new Op(OpKind.AddByte, -1)); break;
                 case '.': ops.Add(new Op(OpKind.Out, 0)); break;
                 case ',': ops.Add(new Op(OpKind.In, 0)); break;
 

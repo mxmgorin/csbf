@@ -87,17 +87,12 @@ public class Vm(IVmIo? io = null, int memorySize = 30_000)
     {
         switch (op.Kind)
         {
-            case OpKind.IncPtr:
+            case OpKind.AddPtr:
                 MovePointer(op.Arg);
                 break;
-            case OpKind.DecPtr:
-                MovePointer(-op.Arg);
-                break;
-            case OpKind.IncByte:
-                _memory[Dp] += (byte)op.Arg;
-                break;
-            case OpKind.DecByte:
-                _memory[Dp] -= (byte)op.Arg;
+            case OpKind.AddByte:
+                // Signed delta; the cast truncates to 8 bits, giving BF's wrap-around.
+                _memory[Dp] = (byte)(_memory[Dp] + op.Arg);
                 break;
             case OpKind.Out:
                 io?.Write(_memory[Dp]);
