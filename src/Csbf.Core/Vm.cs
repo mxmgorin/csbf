@@ -25,7 +25,7 @@ public class Vm(IVmIo? io = null, int memorySize = 30_000)
             return;
         }
 
-        var ops = Parser.Parse(src);
+        var ops = Optimizer.Optimize(Parser.Parse(src));
         Load(ops);
     }
 

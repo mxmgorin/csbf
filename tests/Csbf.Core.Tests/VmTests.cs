@@ -37,6 +37,19 @@ public class VmTests
     }
 
     [Fact]
+    public void Run_MovesValueBetweenCells_WithOptimizedLoop()
+    {
+        var vm = new Vm();
+        vm.Load("+++[>+<-]"); // move 3 from cell 0 into cell 1
+
+        RunToHalt(vm);
+
+        var mem = vm.ReadMemory(0, 2);
+        Assert.Equal((byte)0, mem[0]);
+        Assert.Equal((byte)3, mem[1]);
+    }
+
+    [Fact]
     public void Step_Throws_WhenPointerGoesBelowZero()
     {
         var vm = new Vm(memorySize: 8);
@@ -49,10 +62,13 @@ public class VmTests
     public void Step_Throws_WhenPointerGoesPastEnd()
     {
         var vm = new Vm(memorySize: 2);
-        vm.Load(">>"); // 0 -> 1 (ok), then 1 -> 2 (out of bounds)
+        // '+' between the moves keeps them as separate ops (adjacent same-kind
+        // ops would otherwise be collapsed by the optimizer).
+        vm.Load(">+>"); // 0 -> 1 (ok), inc cell, then 1 -> 2 (out of bounds)
 
         vm.Step();
         Assert.Equal(1, vm.Dp);
+        vm.Step();
         Assert.Throws<BrainfuckRuntimeException>(() => vm.Step());
     }
 
