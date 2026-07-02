@@ -61,8 +61,9 @@ public sealed class GoCodegen : ICodegen
                 break;
 
             case OpKind.In:
-                EmitLine("b, _ := r.ReadByte()");
-                EmitLine("mem[dp] = b");
+                // Assign directly (not ':=') so repeated reads don't redeclare a
+                // variable; on EOF ReadByte yields 0, matching BF convention.
+                EmitLine("mem[dp], _ = r.ReadByte()");
                 break;
 
             case OpKind.Jz:
