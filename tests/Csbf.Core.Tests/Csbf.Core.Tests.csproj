@@ -22,4 +22,8 @@
       <ProjectReference Include="..\..\src\Csbf.Core\Csbf.Core.csproj" />
     </ItemGroup>
 
+    <ItemGroup>
+      <None Include="..\..\samples\*.bf" Link="samples\%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+    </ItemGroup>
+
 </Project>

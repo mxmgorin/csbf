@@ -2,6 +2,40 @@ namespace Csbf.Core.Tests;
 
 public class VmTests
 {
+    private static void RunToHalt(Vm vm)
+    {
+        while (!vm.Halted())
+        {
+            vm.Step();
+        }
+    }
+
+    [Fact]
+    public void Run_HelloWorldSample_PrintsHelloWorld()
+    {
+        var io = new CapturingIo();
+        var vm = new Vm(io);
+        var path = Path.Combine(AppContext.BaseDirectory, "samples", "hello_world.bf");
+        vm.Load(File.ReadAllText(path));
+
+        RunToHalt(vm);
+
+        Assert.Equal("Hello World!\n", io.OutputAsString());
+    }
+
+    [Fact]
+    public void Run_EchoesInput_RoundTrip()
+    {
+        // ',.' reads a byte then writes it; repeated to echo two input bytes.
+        var io = new CapturingIo((byte)'H', (byte)'i');
+        var vm = new Vm(io);
+        vm.Load(",.,.");
+
+        RunToHalt(vm);
+
+        Assert.Equal("Hi", io.OutputAsString());
+    }
+
     [Fact]
     public void Step_Throws_WhenPointerGoesBelowZero()
     {
