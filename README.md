@@ -7,6 +7,8 @@ It implements a full language pipeline:
 
 ```Source → Parser → IR → VM / Codegen```
 
+> **[Try in your browser](https://mxmgorin.github.io/csbf/)** — run client-side via Blazor WebAssembly (no install).
+
 # Features
 - Interactive CLI with REPL
 - Peephole optimizer (run-length folding; opposing moves like `><` and `+-` cancel)

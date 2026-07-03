@@ -28,6 +28,9 @@ project.lock.json
 project.fragment.lock.json
 artifacts/
 
+# Web playground publish output (make publish)
+/publish/
+
 # ASP.NET Scaffolding
 ScaffoldingReadMe.txt
 

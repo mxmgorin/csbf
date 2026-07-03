@@ -1,0 +1,350 @@
+@page "/"
+@using Csbf.Core
+@using Csbf.Codegen
+@inject HttpClient Http
+
+<PageTitle>csbf — Brainfuck playground</PageTitle>
+
+<h1 class="title"><span class="name">csbf</span><span class="tagline"> — a Brainfuck toolchain (interpreter · debugger · transpiler) in your browser, powered by C# and WASM</span></h1>
+<p class="credit">PROGRAMMED BY MXMGORIN</p>
+
+<div class="row">
+    <div class="col-lg-6">
+        <label class="form-label">Sample</label>
+        <select class="form-select form-select-sm mb-2" @onchange="OnSampleSelected">
+            @for (var i = 0; i < _samples.Count; i++)
+            {
+                <option value="@i">@_samples[i].Name</option>
+            }
+        </select>
+
+        <label class="form-label">Source</label>
+        <textarea class="form-control code" rows="7" @bind="_source" @bind:event="oninput"></textarea>
+
+        <label class="form-label mt-2">
+            Input (stdin)
+            @if (_awaitingInput)
+            {
+                <span class="badge bg-warning text-dark">waiting — press Enter to send</span>
+            }
+        </label>
+        <div class="input-group">
+            <input class="form-control code" @ref="_inputRef" @bind="_input" @bind:event="oninput"
+                   @onkeydown="OnStdinKeyDown" placeholder="stdin — seeds the program, and sends on Enter while it waits" />
+            @if (_awaitingInput)
+            {
+                <button class="btn btn-primary" @onclick="SubmitInput">Send</button>
+                <button class="btn btn-outline-secondary" @onclick="SendEof" title="Signal end of input (EOF)">EOF</button>
+            }
+        </div>
+
+        <div class="btn-toolbar mt-2 gap-2">
+            <button class="btn btn-primary" @onclick="Run">▶ Run</button>
+            <button class="btn btn-outline-secondary" @onclick="Step">⏭ Step</button>
+            <button class="btn btn-outline-secondary" @onclick="Reset">⟲ Reset</button>
+            <button class="btn btn-outline-secondary" @onclick="EmitGo">Emit Go</button>
+        </div>
+
+        @if (!string.IsNullOrEmpty(_status))
+        {
+            <div class="alert @(_error ? "alert-danger" : "alert-info") mt-2 py-2 mb-0">@_status</div>
+        }
+
+        <label class="form-label mt-2">Output</label>
+        <pre class="output">@(_io?.Output)</pre>
+
+        @if (!string.IsNullOrEmpty(_emitted))
+        {
+            <label class="form-label mt-2">Emitted Go</label>
+            <pre class="output">@_emitted</pre>
+        }
+    </div>
+
+    <div class="col-lg-6">
+        @if (_vm is { } vm && vm.Loaded())
+        {
+            <div class="regs">
+                <span>IP <b>@($"0x{vm.Ip:X}")</b></span>
+                <span>DP <b>@($"0x{vm.Dp:X}")</b></span>
+                <span>CELL <b>@($"0x{vm.Current:X}")</b></span>
+                <span class="badge @(vm.Halted() ? "bg-secondary" : "bg-success")">@(vm.Halted() ? "halted" : "ready")</span>
+            </div>
+
+            <label class="form-label mt-2">Tape</label>
+            <div class="tape">
+                @for (var i = 0; i < _tape.Length; i++)
+                {
+                    var idx = _tapeStart + i;
+                    <div class="cell @(idx == vm.Dp ? "cell-dp" : "")">
+                        <div class="cell-idx">@idx</div>
+                        <div class="cell-val">@_tape[i]</div>
+                    </div>
+                }
+            </div>
+
+            <label class="form-label mt-2">Disassembly <small class="text-muted">(click a row to toggle a breakpoint)</small></label>
+            <div class="disasm">
+                @for (var ip = 0; ip < vm.Ops.Length; ip++)
+                {
+                    var addr = ip;
+                    <div class="op @(addr == vm.Ip ? "op-cur" : "") @(_breakpoints.Contains(addr) ? "op-bp" : "")"
+                         @onclick="() => ToggleBreakpoint(addr)">
+                        <span class="op-bp-dot">@(_breakpoints.Contains(addr) ? "●" : "")</span>
+                        <span class="op-addr">@($"0x{addr:X}")</span>
+                        <span class="op-txt">@vm.Ops[addr]</span>
+                    </div>
+                }
+            </div>
+        }
+        else
+        {
+            <p class="text-muted">Run or step to load the program, then inspect the tape, registers and disassembly here.</p>
+        }
+    </div>
+</div>
+
+@code {
+    private const int TapeWindow = 24;
+    private const int RunStepLimit = 5_000_000;
+
+    private sealed record Sample(string Name, string Source, string Input);
+    private sealed record ManifestEntry(string Name, string File, string? Input);
+
+    private readonly List<Sample> _samples = [];
+
+    private string _source = "";
+    private string _input = "";
+    private string _status = "";
+    private bool _error;
+    private string _emitted = "";
+
+    private bool _awaitingInput;
+    private ElementReference _inputRef;
+    private bool _shouldFocusInput;
+
+    private Vm? _vm;
+    private WebIo? _io;
+    private readonly HashSet<int> _breakpoints = [];
+
+    private int _tapeStart;
+    private byte[] _tape = [];
+
+    private void Load()
+    {
+        _io = new WebIo(_input);
+        _vm = new Vm(_io);
+        _emitted = "";
+        _awaitingInput = false;
+        Info("");
+        try
+        {
+            _vm.Load(_source);
+        }
+        catch (Exception ex)
+        {
+            Fail($"parse error: {ex.Message}");
+        }
+
+        Refresh();
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Samples live in the repo's /samples folder, served as static web assets.
+        try
+        {
+            var entries = await Http.GetFromJsonAsync<ManifestEntry[]>("samples/manifest.json") ?? [];
+
+            foreach (var e in entries)
+            {
+                var source = await Http.GetStringAsync($"samples/{e.File}");
+                _samples.Add(new Sample(e.Name, source, e.Input ?? ""));
+            }
+
+            if (_samples.Count > 0)
+            {
+                _input = _samples[0].Input;
+                _source = _samples[0].Source;
+                Load();
+            }
+        }
+        catch (Exception ex)
+        {
+            Fail($"could not load samples: {ex.Message}");
+        }
+    }
+
+    private void Reset() => Load();
+
+    private void OnSampleSelected(ChangeEventArgs e)
+    {
+        if (int.TryParse(e.Value?.ToString(), out var i) && i >= 0 && i < _samples.Count)
+        {
+            _input = _samples[i].Input;
+            _source = _samples[i].Source;
+            Load();
+        }
+    }
+
+    private void Step()
+    {
+        if (_vm is null || !_vm.Loaded())
+        {
+            Load();
+        }
+
+        if (_vm!.Halted())
+        {
+            Info("program finished");
+            return;
+        }
+
+        try
+        {
+            _vm.Step();
+            Info("");
+        }
+        catch (BrainfuckRuntimeException ex)
+        {
+            Fail($"runtime error: {ex.Message}");
+        }
+
+        Refresh();
+    }
+
+    private void Run()
+    {
+        // Fresh start when nothing is loaded or the program already finished;
+        // otherwise continue from where a breakpoint stopped.
+        if (_vm is null || !_vm.Loaded() || _vm.Halted())
+        {
+            Load();
+        }
+
+        if (_vm is null || !_vm.Loaded())
+        {
+            return;
+        }
+
+        _awaitingInput = false;
+        var steps = 0;
+        try
+        {
+            while (!_vm.Halted())
+            {
+                // Pause for interactive input when the next op reads and nothing
+                // is buffered (and the user hasn't signalled EOF).
+                if (_io is { AtEof: false, HasInput: false } && _vm.Peek()?.Kind == OpKind.In)
+                {
+                    _awaitingInput = true;
+                    _shouldFocusInput = true;
+                    Info("waiting for input…");
+                    break;
+                }
+
+                _vm.Step();
+
+                if (_breakpoints.Contains(_vm.Ip))
+                {
+                    Info($"hit breakpoint at 0x{_vm.Ip:X}");
+                    break;
+                }
+
+                if (++steps >= RunStepLimit)
+                {
+                    Fail($"reached step limit ({RunStepLimit:N0}) — possible infinite loop");
+                    break;
+                }
+            }
+        }
+        catch (BrainfuckRuntimeException ex)
+        {
+            Fail($"runtime error: {ex.Message}");
+        }
+
+        Refresh();
+    }
+
+    private void SubmitInput()
+    {
+        if (_io is null)
+        {
+            return;
+        }
+
+        _io.Feed(_input + "\n"); // line-based: Enter sends a newline
+        _input = "";
+        Run();
+    }
+
+    private void SendEof()
+    {
+        _io?.SignalEof();
+        Run();
+    }
+
+    private void OnStdinKeyDown(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter" && _awaitingInput)
+        {
+            SubmitInput();
+        }
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (_shouldFocusInput)
+        {
+            _shouldFocusInput = false;
+            try { await _inputRef.FocusAsync(); }
+            catch { /* input may no longer be rendered */ }
+        }
+    }
+
+    private void EmitGo()
+    {
+        try
+        {
+            var gen = new GoCodegen();
+            new Pipeline(gen).Run(Parser.Parse(_source));
+            _emitted = gen.Emit();
+            Info("emitted Go");
+        }
+        catch (Exception ex)
+        {
+            Fail($"emit error: {ex.Message}");
+        }
+    }
+
+    private void ToggleBreakpoint(int ip)
+    {
+        if (!_breakpoints.Add(ip))
+        {
+            _breakpoints.Remove(ip);
+        }
+    }
+
+    private void Refresh()
+    {
+        if (_vm is null || !_vm.Loaded())
+        {
+            _tape = [];
+            return;
+        }
+
+        _tapeStart = _vm.Dp < TapeWindow / 2 ? 0 : _vm.Dp - TapeWindow / 2;
+        _tape = _vm.ReadMemory((uint)_tapeStart, TapeWindow).ToArray();
+    }
+
+    private void Info(string msg)
+    {
+        _status = msg;
+        _error = false;
+    }
+
+    private void Fail(string msg)
+    {
+        _status = msg;
+        _error = true;
+    }
+}
