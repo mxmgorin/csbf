@@ -13,7 +13,7 @@ It implements a full language pipeline:
 - Interactive CLI with REPL
 - Peephole optimizer (run-length folding; opposing moves like `><` and `+-` cancel)
 - Code generation for emitting target-language source files (e.g. Go)
-- Debugger with instruction-index breakpoints
+- Debugger with instruction-index breakpoints and time-travel (reverse stepping)
 - Brainfuck parser producing a structured IR
 - Virtual machine with step-by-step execution, registers and memory inspection
 
@@ -66,6 +66,7 @@ Hello World!
 | `load <file>` | | Load a Brainfuck source file into the VM |
 | `run [file]` | | Optionally load `file`, then run until a breakpoint or program end |
 | `step` | | Execute one instruction and print it |
+| `back [n]` | `stepb` | Step backward `n` instructions (default 1), restoring tape + registers |
 | `break <n>` | | Toggle a breakpoint at instruction index `n` (decimal) |
 | `regs` | | Show registers: IP, DP, and the current cell |
 | `mem <from> <len>` | | Dump `len` bytes of tape memory starting at offset `from` |

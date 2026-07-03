@@ -110,6 +110,8 @@
 
 .op-cur {
     background: var(--bs-warning-bg-subtle);
+    box-shadow: inset 3px 0 0 var(--bs-warning);
+    font-weight: 600;
 }
 
 .op-bp .op-txt,

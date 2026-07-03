@@ -11,6 +11,7 @@ public class HelpCmd : ICmd
         Console.WriteLine();
         Console.WriteLine("  load <file>              load Brainfuck source file");
         Console.WriteLine("  step                     execute one instruction");
+        Console.WriteLine("  back [n]                 step backward n instructions (default 1); alias: stepb");
         Console.WriteLine("  run [file]               run until breakpoint or end");
         Console.WriteLine("  break <ip>               set breakpoint at instruction pointer");
         Console.WriteLine("  regs                     show registers (IP, DP, current cell)");

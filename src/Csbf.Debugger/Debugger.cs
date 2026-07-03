@@ -8,10 +8,17 @@ public enum DebugResult
     Finished
 }
 
-public sealed class Debugger(Vm vm)
+public sealed class Debugger
 {
     private readonly HashSet<int> _breakpoints = [];
-    public Vm Vm { get; } = vm;
+    public Vm Vm { get; }
+
+    public Debugger(Vm vm)
+    {
+        Vm = vm;
+        // Enable time-travel recording so the `back` command works out of the box.
+        Vm.EnableRecording();
+    }
 
     public bool AddBreakpoint(int ip) => _breakpoints.Add(ip);
     public bool RemoveBreakpoint(int ip) => _breakpoints.Remove(ip);

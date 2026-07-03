@@ -2,6 +2,7 @@
 @using Csbf.Core
 @using Csbf.Codegen
 @inject HttpClient Http
+@inject IJSRuntime JS
 
 <PageTitle>csbf — Brainfuck playground</PageTitle>
 
@@ -40,6 +41,7 @@
 
         <div class="btn-toolbar mt-2 gap-2">
             <button class="btn btn-primary" @onclick="Run">▶ Run</button>
+            <button class="btn btn-outline-secondary" @onclick="StepBack" disabled="@(!CanStepBack)">⏮ Back</button>
             <button class="btn btn-outline-secondary" @onclick="Step">⏭ Step</button>
             <button class="btn btn-outline-secondary" @onclick="Reset">⟲ Reset</button>
             <button class="btn btn-outline-secondary" @onclick="EmitGo">Emit Go</button>
@@ -121,6 +123,7 @@
     private bool _awaitingInput;
     private ElementReference _inputRef;
     private bool _shouldFocusInput;
+    private bool _scrollToOp;
 
     private Vm? _vm;
     private WebIo? _io;
@@ -133,6 +136,7 @@
     {
         _io = new WebIo(_input);
         _vm = new Vm(_io);
+        _vm.EnableRecording(); // opt in to time-travel so ⏮ Back works
         _emitted = "";
         _awaitingInput = false;
         Info("");
@@ -209,6 +213,29 @@
             Fail($"runtime error: {ex.Message}");
         }
 
+        Refresh();
+    }
+
+    // Only the last N executed ops are reversible (bounded ring buffer in the VM).
+    private bool CanStepBack => _vm is { RecordingEnabled: true } && _vm.HistoryDepth > 0;
+
+    private void StepBack()
+    {
+        if (_vm is null || !_vm.Loaded())
+        {
+            return;
+        }
+
+        if (!_vm.StepBack())
+        {
+            Info("nothing to step back to");
+            return;
+        }
+
+        _awaitingInput = false;
+        Info(_vm.HistoryDropped && _vm.HistoryDepth == 0
+            ? "reached start of recorded history"
+            : "");
         Refresh();
     }
 
@@ -299,6 +326,13 @@
             try { await _inputRef.FocusAsync(); }
             catch { /* input may no longer be rendered */ }
         }
+
+        if (_scrollToOp)
+        {
+            _scrollToOp = false;
+            try { await JS.InvokeVoidAsync("csbfScrollToCurrentOp"); }
+            catch { /* JS not ready / element not rendered */ }
+        }
     }
 
     private void EmitGo()
@@ -334,6 +368,7 @@
 
         _tapeStart = _vm.Dp < TapeWindow / 2 ? 0 : _vm.Dp - TapeWindow / 2;
         _tape = _vm.ReadMemory((uint)_tapeStart, TapeWindow).ToArray();
+        _scrollToOp = true; // keep the current disassembly row in view after the render
     }
 
     private void Info(string msg)

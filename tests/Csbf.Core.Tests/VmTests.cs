@@ -102,4 +102,122 @@ public class VmTests
         vm.Step();
         Assert.Equal(1, vm.Dp);
     }
+
+    [Fact]
+    public void StepBack_ReturnsFalse_WhenRecordingDisabled()
+    {
+        var vm = new Vm();
+        vm.Load("+");
+        vm.Step();
+
+        Assert.False(vm.RecordingEnabled);
+        Assert.False(vm.StepBack());
+        Assert.Equal((byte)1, vm.ReadMemory(0, 1)[0]); // state untouched
+    }
+
+    [Fact]
+    public void StepBack_RestoresCellWrittenByAddByte()
+    {
+        var vm = new Vm();
+        vm.EnableRecording();
+        vm.Load("+"); // AddByte(+1): 0 -> 1
+
+        vm.Step();
+        Assert.Equal((byte)1, vm.ReadMemory(0, 1)[0]);
+
+        Assert.True(vm.StepBack());
+        Assert.Equal((byte)0, vm.ReadMemory(0, 1)[0]); // byte restored
+        Assert.Equal(0, vm.Ip);
+        Assert.False(vm.StepBack()); // back at the start
+    }
+
+    [Fact]
+    public void StepBack_ReversesPointerMove()
+    {
+        var vm = new Vm();
+        vm.EnableRecording();
+        // '+' between the moves keeps them as separate ops (see Step_Throws... above).
+        vm.Load(">+>"); // AddPtr(+1), AddByte(+1), AddPtr(+1)
+
+        vm.Step(); // Dp 0 -> 1
+        vm.Step(); // cell[1] 0 -> 1
+        vm.Step(); // Dp 1 -> 2
+        Assert.Equal(2, vm.Dp);
+
+        Assert.True(vm.StepBack()); // undo Dp 1 -> 2
+        Assert.Equal(1, vm.Dp);
+        Assert.True(vm.StepBack()); // undo cell[1]
+        Assert.Equal((byte)0, vm.ReadMemory(1, 1)[0]);
+        Assert.True(vm.StepBack()); // undo Dp 0 -> 1
+        Assert.Equal(0, vm.Dp);
+    }
+
+    [Fact]
+    public void StepBack_AfterNSteps_RestoresExactStartState()
+    {
+        var vm = new Vm();
+        vm.EnableRecording();
+        vm.Load("+++[>+<-]>+"); // loops, pointer moves, and byte writes
+
+        var startIp = vm.Ip;
+        var startDp = vm.Dp;
+        var startMem = vm.ReadMemory(0, 4).ToArray();
+
+        var steps = 0;
+
+        while (!vm.Halted())
+        {
+            vm.Step();
+            steps++;
+        }
+
+        for (var i = 0; i < steps; i++)
+        {
+            Assert.True(vm.StepBack());
+        }
+
+        Assert.Equal(startIp, vm.Ip);
+        Assert.Equal(startDp, vm.Dp);
+        Assert.Equal(startMem, vm.ReadMemory(0, 4).ToArray());
+        Assert.False(vm.StepBack()); // history exhausted
+    }
+
+    [Fact]
+    public void Recording_BoundsHistory_AndReportsDropped()
+    {
+        var vm = new Vm();
+        vm.EnableRecording(capacity: 2);
+        vm.Load("+>-"); // three ops -> three deltas, but the ring holds only two
+
+        vm.Step();
+        vm.Step();
+        vm.Step();
+
+        Assert.True(vm.HistoryDropped);
+        Assert.Equal(2, vm.HistoryDepth);
+        Assert.True(vm.StepBack());
+        Assert.True(vm.StepBack());
+        Assert.False(vm.StepBack()); // oldest delta was dropped
+    }
+
+    [Fact]
+    public void Load_ClearsRecordedHistory()
+    {
+        var vm = new Vm();
+        vm.EnableRecording();
+        vm.Load("+");
+        vm.Step();
+
+        vm.Load("+"); // reloading resets history (op indices change)
+
+        Assert.Equal(0, vm.HistoryDepth);
+        Assert.False(vm.StepBack());
+    }
+
+    [Fact]
+    public void EnableRecording_Throws_OnNonPositiveCapacity()
+    {
+        var vm = new Vm();
+        Assert.Throws<ArgumentOutOfRangeException>(() => vm.EnableRecording(0));
+    }
 }
