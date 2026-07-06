@@ -66,6 +66,20 @@ public sealed class GoCodegen : ICodegen
                 EmitLine("mem[dp], _ = r.ReadByte()");
                 break;
 
+            case OpKind.SetByte:
+                // Lowered clear/set: mem[dp] = <n> (n is 0 for [-]/[+]).
+                EmitLine("mem[dp] = ", op.Arg.ToString());
+                break;
+
+            case OpKind.ScanPtr:
+                // Lowered scan: skip cells by a fixed stride until a zero.
+                EmitLine("for mem[dp] != 0 {");
+                _indent++;
+                EmitLine("dp += ", op.Arg.ToString());
+                _indent--;
+                EmitLine("}");
+                break;
+
             case OpKind.Jz:
                 EmitLine("for mem[dp] != 0 {");
                 _indent++;

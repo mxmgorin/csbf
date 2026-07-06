@@ -18,6 +18,8 @@ public class HelpCmd : ICmd
         Console.WriteLine("  mem <from> <len>         dump memory range");
         Console.WriteLine("  eval <src>               execute inline Brainfuck source");
         Console.WriteLine("  emit <lang> <in> [out]   compile <in> to target language <lang>");
+        Console.WriteLine("  opt [pass] [on|off]      show/toggle optimizer passes (collapse, clear, scan)");
+        Console.WriteLine("  bench <file> [runs]      time a program across optimizer passes");
         Console.WriteLine("  help                     show this help");
         Console.WriteLine("  exit | quit              exit cli");
         Console.WriteLine();

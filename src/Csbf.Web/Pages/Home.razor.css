@@ -27,10 +27,11 @@
     font-size: .9rem;
 }
 
-/* Terminal-style output pane: intentionally dark in both themes. */
+/* Output / emitted-code pane: a recessed surface that follows the theme. */
 .output {
-    background: #1e1e1e;
-    color: #eaeaea;
+    background: var(--bs-tertiary-bg);
+    color: var(--bs-body-color);
+    border: 1px solid var(--bs-border-color);
     padding: .6rem .75rem;
     border-radius: 4px;
     min-height: 4rem;

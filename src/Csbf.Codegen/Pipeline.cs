@@ -6,14 +6,14 @@ public sealed class Pipeline(params ICodegen[] gens)
 {
     private readonly Analyser _analyser = new();
 
-    public void Run(IEnumerable<Op> ops)
+    public void Run(IEnumerable<Op> ops, OptPasses passes = OptPasses.All)
     {
         foreach (var s in gens)
         {
             s.OnBegin();
         }
 
-        Walk(Optimizer.Optimize(ops));
+        Walk(Optimizer.Optimize(ops, passes));
 
         foreach (var s in gens)
         {

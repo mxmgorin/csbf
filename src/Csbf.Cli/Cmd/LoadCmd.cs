@@ -29,7 +29,7 @@ public class LoadCmd : ICmd
             return;
         }
 
-        ctx.Debugger.Vm.Load(src);
+        ctx.Debugger.Vm.Load(src, ctx.Optimizations);
     }
 
     private static string ReadFile(string path)

@@ -148,8 +148,8 @@ code {
 /* Floating light/dark theme toggle */
 .theme-toggle {
     position: fixed;
-    bottom: 1rem;
-    right: 1rem;
+    top: 5.5rem;   /* stacked below the GitHub corner, top-right */
+    right: 0.35rem;
     z-index: 1050;
     width: 2.6rem;
     height: 2.6rem;

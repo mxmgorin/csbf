@@ -30,7 +30,19 @@ public enum OpKind
     /// <summary>
     /// Jump if non-zero
     /// </summary>
-    Jnz
+    Jnz,
+
+    /// <summary>
+    /// Set the byte at the pointer to a constant (<see cref="Op.Arg"/>).
+    /// Lowered from clear loops <c>[-]</c> / <c>[+]</c> (which is <c>SetByte 0</c>).
+    /// </summary>
+    SetByte,
+
+    /// <summary>
+    /// Scan the tape from the pointer by a fixed signed stride (<see cref="Op.Arg"/>)
+    /// until a zero cell (memchr-style). Lowered from scan loops <c>[&gt;]</c> / <c>[&lt;]</c>.
+    /// </summary>
+    ScanPtr
 }
 
 public readonly record struct Op(OpKind Kind, int Arg)
@@ -44,6 +56,8 @@ public readonly record struct Op(OpKind Kind, int Arg)
             OpKind.In => "IN",
             OpKind.Jz => $"JZ  0x{Arg:X}",
             OpKind.Jnz => $"JNZ 0x{Arg:X}",
+            OpKind.SetByte => $"SET {Arg}",
+            OpKind.ScanPtr => $"SCAN {Arg}",
             _ => Kind.ToString()
         };
 }

@@ -1,0 +1,130 @@
+@using Csbf.Core
+
+@if (_error is not null)
+{
+    <div class="text-danger small mt-1">@_error</div>
+}
+
+@if (_rows is { Count: > 0 })
+{
+    <label class="form-label mt-2">Benchmark <small class="text-muted">(this program, per pass; speedup vs. none)</small></label>
+    <table class="table table-sm code mb-0">
+        <thead>
+            <tr>
+                <th>passes</th>
+                <th class="text-end">ops</th>
+                <th class="text-end">steps</th>
+                <th class="text-end">ms</th>
+                <th class="text-end">speedup</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var r in _rows)
+            {
+                <tr>
+                    <td>@r.Label</td>
+                    <td class="text-end">@r.Ops</td>
+                    <td class="text-end">@(r.Capped ? $"≥{r.Steps:N0}" : r.Steps.ToString("N0"))</td>
+                    <td class="text-end">@r.Ms.ToString("0.0")</td>
+                    <td class="text-end">@(r.Capped ? "capped" : r.Speedup)</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    /// <summary>Brainfuck source to benchmark across optimizer passes.</summary>
+    [Parameter, EditorRequired]
+    public string Source { get; set; } = "";
+
+    // Keep the UI responsive on heavy programs (e.g. mandelbrot never halts here).
+    private const int StepCap = 5_000_000;
+
+    private static readonly (string Label, OptPasses Passes)[] Levels =
+    [
+        ("none", OptPasses.None),
+        ("collapse", OptPasses.Collapse),
+        ("+clear", OptPasses.Collapse | OptPasses.ClearLoop),
+        ("+scan", OptPasses.Collapse | OptPasses.ScanLoop),
+        ("all", OptPasses.All),
+    ];
+
+    private List<Row>? _rows;
+    private string? _error;
+
+    private sealed record Row(string Label, int Ops, long Steps, double Ms, string Speedup, bool Capped);
+
+    // Discards output and returns EOF so timing reflects the VM, not I/O.
+    private sealed class DiscardIo : IVmIo
+    {
+        public byte Read() => 0;
+        public void Write(byte value) { }
+    }
+
+    /// <summary>Benchmark the current <see cref="Source"/> across optimizer passes.</summary>
+    public void Run()
+    {
+        Compute();
+        StateHasChanged();
+    }
+
+    private void Compute()
+    {
+        _error = null;
+
+        if (string.IsNullOrWhiteSpace(Source))
+        {
+            _rows = null;
+            return;
+        }
+
+        try
+        {
+            var parsed = Parser.Parse(Source);
+            var rows = new List<Row>(Levels.Length);
+            double? baseline = null;
+
+            foreach (var (label, passes) in Levels)
+            {
+                var ops = Optimizer.Optimize(parsed, passes);
+                var (steps, ms, capped) = Measure(ops);
+                baseline ??= ms;
+
+                var speedup = ms > 0 ? $"{baseline.Value / ms:0.00}x" : "n/a";
+                rows.Add(new Row(label, ops.Count, steps, ms, speedup, capped));
+            }
+
+            _rows = rows;
+        }
+        catch (Exception ex)
+        {
+            _rows = null;
+            _error = $"bench error: {ex.Message}";
+        }
+    }
+
+    private static (long steps, double ms, bool capped) Measure(IReadOnlyList<Op> ops)
+    {
+        var vm = new Vm(new DiscardIo());
+        vm.Load(ops);
+
+        long n = 0;
+        var capped = false;
+        var sw = System.Diagnostics.Stopwatch.StartNew();
+
+        while (!vm.Halted())
+        {
+            vm.Step();
+
+            if (++n >= StepCap)
+            {
+                capped = true;
+                break;
+            }
+        }
+
+        sw.Stop();
+        return (n, sw.Elapsed.TotalMilliseconds, capped);
+    }
+}

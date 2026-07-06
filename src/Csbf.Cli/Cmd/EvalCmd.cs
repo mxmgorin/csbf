@@ -13,7 +13,7 @@ public class EvalCmd : ICmd
         }
         
         var src = args[1];
-        ctx.Debugger.Vm.Load(src);
+        ctx.Debugger.Vm.Load(src, ctx.Optimizations);
         ctx.Debugger.Debug();
     }
 }

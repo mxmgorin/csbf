@@ -32,6 +32,54 @@ public class GoCodegenTests
     }
 
     [Fact]
+    public void EmitOp_EmitsSetByte_AsAssignment()
+    {
+        var codegen = new GoCodegen();
+        codegen.OnBegin();
+        codegen.OnOp(new Op(OpKind.SetByte, 0));
+        codegen.OnEnd(new AnalysisResult(false, false));
+
+        Assert.Contains("mem[dp] = 0", codegen.Emit());
+    }
+
+    [Fact]
+    public void EmitOp_EmitsScanPtr_AsSkipLoop()
+    {
+        var codegen = new GoCodegen();
+        codegen.OnBegin();
+        codegen.OnOp(new Op(OpKind.ScanPtr, 1));
+        codegen.OnEnd(new AnalysisResult(false, false));
+
+        var code = codegen.Emit();
+        Assert.Contains("for mem[dp] != 0 {", code);
+        Assert.Contains("dp += 1", code);
+    }
+
+    [Fact]
+    public void Pipeline_LowersClearLoop_ToReadableAssignment()
+    {
+        var gen = new GoCodegen();
+        new Pipeline(gen).Run(Parser.Parse("+[-]"));
+
+        var code = gen.Emit();
+        Assert.Contains("mem[dp] += 1", code);
+        Assert.Contains("mem[dp] = 0", code);            // clear lowered to an assignment
+        Assert.DoesNotContain("for mem[dp] != 0", code); // ...not a loop
+    }
+
+    [Fact]
+    public void Pipeline_WithPassesDisabled_EmitsRawClearLoop()
+    {
+        // Disabling the passes falls back to the 1:1 loop transliteration.
+        var gen = new GoCodegen();
+        new Pipeline(gen).Run(Parser.Parse("+[-]"), OptPasses.None);
+
+        var code = gen.Emit();
+        Assert.Contains("for mem[dp] != 0 {", code);
+        Assert.DoesNotContain("mem[dp] = 0", code);
+    }
+
+    [Fact]
     public void EmitOp_EmitsRepeatedInput_WithoutRedeclaringVariable()
     {
         var codegen = new GoCodegen();

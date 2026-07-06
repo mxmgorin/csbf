@@ -11,7 +11,8 @@ It implements a full language pipeline:
 
 # Features
 - Interactive CLI with REPL
-- Peephole optimizer (run-length folding; opposing moves like `><` and `+-` cancel)
+- Optimizer with individually toggleable passes: run-length folding (`><`/`+-` cancel), clear-loop lowering (`[-]`/`[+]` → set), and scan-loop lowering (`[>]`/`[<]` → memchr-style skip)
+- Built-in `bench` command to compare execution across optimizer passes
 - Code generation for emitting target-language source files (e.g. Go)
 - Debugger with instruction-index breakpoints and time-travel (reverse stepping)
 - Brainfuck parser producing a structured IR
@@ -72,9 +73,40 @@ Hello World!
 | `mem <from> <len>` | | Dump `len` bytes of tape memory starting at offset `from` |
 | `eval <src>` | | Load and run inline Brainfuck source |
 | `emit <lang> <in> [out]` | | Compile `in` to `<lang>` (currently `go`); prints to stdout, or writes `out` |
+| `opt [pass] [on\|off]` | | Show optimizer passes, or toggle one (`collapse`, `clear`, `scan`); `opt all`/`opt none` set all |
+| `bench <file> [runs]` | | Time a program across optimizer passes (best of `runs`, default 3) |
 | `bytecode` | `bc` | Disassemble the loaded program |
 | `help` | | List commands |
 | `exit` | `quit` | Exit the CLI |
+
+# Optimizer
+The optimizer lowers common Brainfuck idioms to dedicated IR ops, so both the VM and
+the code generators do less work:
+
+| Pass | Recognizes | Lowers to |
+| --- | --- | --- |
+| `collapse` | runs like `+++`, `>>`, and cancelling `><` / `+-` | one folded `ADD_BYTE` / `ADD_PTR` |
+| `clear` | clear loops `[-]` / `[+]` | `SET 0` |
+| `scan` | scan loops `[>]` / `[<]` (any stride) | `SCAN <stride>` (memchr-style skip) |
+
+Each pass is independent and can be toggled from the REPL (it affects both execution and emitted code):
+
+```
+> opt              # show which passes are on
+> opt scan off     # disable just the scan-loop pass
+> emit go x.bf     # emitted Go now keeps the raw scan loop
+```
+
+Compare the effect on a program with `bench`:
+
+```
+> bench samples/mandelbrot.bf 1
+  level          ops            steps   time(ms)  speedup
+  none         11451    2,000,000,000   ...        1.00x  (capped)
+  all           3619    ...             ...        ~5x
+```
+
+See [`docs/benchmark.md`](docs/benchmark.md) for full numbers (mandelbrot runs ~5× faster with all passes on).
 
 # Code generation
 Compile a Brainfuck program to Go and run it:

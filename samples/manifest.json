@@ -3,5 +3,6 @@
   { "name": "Alphabet (A–Z)", "file": "alphabet.bf" },
   { "name": "Echo (cat)", "file": "echo.bf", "input": "csbf!" },
   { "name": "Sierpinski triangle", "file": "sierpinski.bf" },
+  { "name": "Mandelbrot (heavy — may hit the step limit)", "file": "mandelbrot.bf" },
   { "name": "Ghost (maze game — move with w/a/s/d)", "file": "ghost_game.bf" }
 ]

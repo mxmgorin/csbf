@@ -50,6 +50,72 @@ public class VmTests
     }
 
     [Fact]
+    public void Run_ClearLoop_ZeroesCell()
+    {
+        var vm = new Vm();
+        vm.Load("+++[-]"); // AddByte(3), SetByte(0)
+
+        RunToHalt(vm);
+
+        Assert.Equal((byte)0, vm.ReadMemory(0, 1)[0]);
+    }
+
+    [Fact]
+    public void Run_ScanLoop_StopsAtFirstZeroToTheRight()
+    {
+        var vm = new Vm();
+        // cells: 1 1 1 0, pointer back to 0, then [>] scans right to the zero.
+        vm.Load("+>+>+<<[>]");
+
+        RunToHalt(vm);
+
+        Assert.Equal(3, vm.Dp);
+        var mem = vm.ReadMemory(0, 4);
+        Assert.Equal((byte)1, mem[0]);
+        Assert.Equal((byte)0, mem[3]);
+    }
+
+    [Fact]
+    public void Run_ScanLoop_StopsAtFirstZeroToTheLeft()
+    {
+        var vm = new Vm();
+        // cells: c1=0, c2=1, c3=1, start at c3, then [<] scans left to c1.
+        vm.Load(">>+>+[<]");
+
+        RunToHalt(vm);
+
+        Assert.Equal(1, vm.Dp);
+    }
+
+    [Fact]
+    public void StepBack_RestoresCellClearedBySetByte()
+    {
+        var vm = new Vm();
+        vm.EnableRecording();
+        vm.Load("+++[-]"); // AddByte(3) then SetByte(0)
+
+        RunToHalt(vm);
+        Assert.Equal((byte)0, vm.ReadMemory(0, 1)[0]);
+
+        Assert.True(vm.StepBack()); // undo the clear
+        Assert.Equal((byte)3, vm.ReadMemory(0, 1)[0]);
+    }
+
+    [Fact]
+    public void StepBack_ReversesScan_InOneStep()
+    {
+        var vm = new Vm();
+        vm.EnableRecording();
+        vm.Load("+>+>+<<[>]"); // last op is a scan that moves the pointer 0 -> 3
+
+        RunToHalt(vm);
+        Assert.Equal(3, vm.Dp);
+
+        Assert.True(vm.StepBack()); // the whole scan reverses as one step
+        Assert.Equal(0, vm.Dp);
+    }
+
+    [Fact]
     public void Step_Throws_WhenPointerGoesBelowZero()
     {
         var vm = new Vm(memorySize: 8);

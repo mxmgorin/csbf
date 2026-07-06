@@ -36,15 +36,23 @@ public class Vm(IVmIo? io = null, int memorySize = 30_000)
     /// <summary>True if the bounded history has dropped older states to stay within capacity.</summary>
     public bool HistoryDropped => _historyDropped;
 
-    public void Load(string src)
+    public void Load(string src, OptPasses passes = OptPasses.All)
     {
         if (string.IsNullOrEmpty(src))
         {
             return;
         }
 
-        var ops = Optimizer.Optimize(Parser.Parse(src));
+        var ops = Optimizer.Optimize(Parser.Parse(src), passes);
         Load(ops);
+    }
+
+    /// <summary>Load a pre-built op list directly (bypassing parse/optimize).</summary>
+    public void Load(IReadOnlyList<Op> ops)
+    {
+        Ops = ops.ToArray();
+        // Recorded deltas reference the previous program's op indices.
+        ClearHistory();
     }
 
     /// <summary>
@@ -147,13 +155,6 @@ public class Vm(IVmIo? io = null, int memorySize = 30_000)
         Execute(op);
     }
 
-    private void Load(IReadOnlyCollection<Op> ops)
-    {
-        Ops = ops.ToArray();
-        // Recorded deltas reference the previous program's op indices.
-        ClearHistory();
-    }
-
     private void Execute(Op op)
     {
         var ipBefore = Ip;
@@ -181,6 +182,21 @@ public class Vm(IVmIo? io = null, int memorySize = 30_000)
                 cellIndex = Dp;
                 cellOld = _memory[Dp];
                 _memory[Dp] = io?.Read() ?? 0;
+                break;
+            case OpKind.SetByte:
+                cellIndex = Dp;
+                cellOld = _memory[Dp];
+                _memory[Dp] = (byte)op.Arg;
+                break;
+            case OpKind.ScanPtr:
+                // memchr-style: advance the pointer by a fixed stride until a
+                // zero cell. Only Dp changes, so the step stays reversible
+                // (dpBefore is recorded); a scan off the tape throws like AddPtr.
+                while (_memory[Dp] != 0)
+                {
+                    MovePointer(op.Arg);
+                }
+
                 break;
             case OpKind.Jz:
                 if (_memory[Dp] == 0)

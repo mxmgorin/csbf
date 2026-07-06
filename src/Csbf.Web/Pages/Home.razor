@@ -40,11 +40,26 @@
         </div>
 
         <div class="btn-toolbar mt-2 gap-2">
+            <button class="btn btn-outline-secondary" @onclick="RunBench">⏱ Bench</button>
             <button class="btn btn-primary" @onclick="Run">▶ Run</button>
             <button class="btn btn-outline-secondary" @onclick="StepBack" disabled="@(!CanStepBack)">⏮ Back</button>
             <button class="btn btn-outline-secondary" @onclick="Step">⏭ Step</button>
             <button class="btn btn-outline-secondary" @onclick="Reset">⟲ Reset</button>
             <button class="btn btn-outline-secondary" @onclick="EmitGo">Emit Go</button>
+        </div>
+
+        <div class="d-flex align-items-center flex-wrap gap-3 mt-2">
+            <span class="form-label mb-0">Optimizations</span>
+            @foreach (var (flag, name) in _optToggles)
+            {
+                var f = flag; // capture per-iteration for the lambda
+                <div class="form-check form-check-inline mb-0">
+                    <input class="form-check-input" type="checkbox" id="opt-@name"
+                           checked="@_passes.HasFlag(f)"
+                           @onchange="e => SetPass(f, (bool)(e.Value ?? false))" />
+                    <label class="form-check-label code" for="opt-@name">@name</label>
+                </div>
+            }
         </div>
 
         @if (!string.IsNullOrEmpty(_status))
@@ -84,7 +99,7 @@
                 }
             </div>
 
-            <label class="form-label mt-2">Disassembly <small class="text-muted">(click a row to toggle a breakpoint)</small></label>
+            <label class="form-label mt-2">Instructions <small class="text-muted">(click a row to toggle a breakpoint)</small></label>
             <div class="disasm">
                 @for (var ip = 0; ip < vm.Ops.Length; ip++)
                 {
@@ -100,8 +115,10 @@
         }
         else
         {
-            <p class="text-muted">Run or step to load the program, then inspect the tape, registers and disassembly here.</p>
+            <p class="text-muted">Run or step to load the program, then inspect the tape, registers and instructions here.</p>
         }
+
+        <BenchPanel @ref="_benchPanel" Source="@_source" />
     </div>
 </div>
 
@@ -113,6 +130,16 @@
     private sealed record ManifestEntry(string Name, string File, string? Input);
 
     private readonly List<Sample> _samples = [];
+
+    // Optimizer passes are individually toggleable; changing one reloads the VM.
+    private OptPasses _passes = OptPasses.All;
+
+    private static readonly (OptPasses Flag, string Name)[] _optToggles =
+    [
+        (OptPasses.Collapse, "collapse"),
+        (OptPasses.ClearLoop, "clear"),
+        (OptPasses.ScanLoop, "scan"),
+    ];
 
     private string _source = "";
     private string _input = "";
@@ -127,6 +154,7 @@
 
     private Vm? _vm;
     private WebIo? _io;
+    private BenchPanel? _benchPanel;
     private readonly HashSet<int> _breakpoints = [];
 
     private int _tapeStart;
@@ -142,7 +170,7 @@
         Info("");
         try
         {
-            _vm.Load(_source);
+            _vm.Load(_source, _passes);
         }
         catch (Exception ex)
         {
@@ -150,6 +178,12 @@
         }
 
         Refresh();
+    }
+
+    private void SetPass(OptPasses flag, bool on)
+    {
+        _passes = on ? _passes | flag : _passes & ~flag;
+        Load(); // reload so the disassembly and tape reflect the change
     }
 
     protected override async Task OnInitializedAsync()
@@ -340,7 +374,7 @@
         try
         {
             var gen = new GoCodegen();
-            new Pipeline(gen).Run(Parser.Parse(_source));
+            new Pipeline(gen).Run(Parser.Parse(_source), _passes);
             _emitted = gen.Emit();
             Info("emitted Go");
         }
@@ -349,6 +383,8 @@
             Fail($"emit error: {ex.Message}");
         }
     }
+
+    private void RunBench() => _benchPanel?.Run();
 
     private void ToggleBreakpoint(int ip)
     {

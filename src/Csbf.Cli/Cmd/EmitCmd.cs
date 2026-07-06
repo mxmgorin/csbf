@@ -32,7 +32,7 @@ public class EmitCmd : ICmd
 
         var src = File.ReadAllText(args[2]);
         var ops = Parser.Parse(src);
-        new Pipeline(codegen).Run(ops);
+        new Pipeline(codegen).Run(ops, ctx.Optimizations);
         var code = codegen.Emit();
 
         if (args.Length == 4)
