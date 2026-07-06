@@ -105,6 +105,12 @@ code {
     color: #c02d76;
 }
 
+/* Monospace utility shared across the playground (source, tables, toggles). */
+.code {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: .9rem;
+}
+
 .form-floating > .form-control-plaintext::placeholder, .form-floating > .form-control::placeholder {
     color: var(--bs-secondary-color);
     text-align: end;

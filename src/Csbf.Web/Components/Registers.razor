@@ -1,0 +1,12 @@
+@using Csbf.Core
+
+<div class="regs">
+    <span>IP <b>@($"0x{Vm.Ip:X}")</b></span>
+    <span>DP <b>@($"0x{Vm.Dp:X}")</b></span>
+    <span>CELL <b>@($"0x{Vm.Current:X}")</b></span>
+    <span class="badge @(Vm.Halted() ? "bg-secondary" : "bg-success")">@(Vm.Halted() ? "halted" : "ready")</span>
+</div>
+
+@code {
+    [Parameter, EditorRequired] public Vm Vm { get; set; } = default!;
+}

@@ -1,0 +1,24 @@
+@using Csbf.Core
+
+<label class="form-label mt-2">Tape</label>
+<div class="tape">
+    @{
+        var start = Vm.Dp < Window / 2 ? 0 : Vm.Dp - Window / 2;
+        var cells = Vm.ReadMemory((uint)start, Window).ToArray();
+    }
+    @for (var i = 0; i < cells.Length; i++)
+    {
+        var idx = start + i;
+        <div class="cell @(idx == Vm.Dp ? "cell-dp" : "")">
+            <div class="cell-idx">@idx</div>
+            <div class="cell-val">@cells[i]</div>
+        </div>
+    }
+</div>
+
+@code {
+    // How many cells of tape to show, centered on the data pointer.
+    private const int Window = 24;
+
+    [Parameter, EditorRequired] public Vm Vm { get; set; } = default!;
+}

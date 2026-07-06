@@ -1,0 +1,41 @@
+.disasm {
+    max-height: 20rem;
+    overflow: auto;
+    border: 1px solid var(--bs-border-color);
+    border-radius: 4px;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: .8rem;
+}
+
+.op {
+    display: flex;
+    gap: .5rem;
+    padding: .05rem .5rem;
+    cursor: pointer;
+    user-select: none;
+}
+
+.op:hover {
+    background: var(--bs-tertiary-bg);
+}
+
+.op-cur {
+    background: var(--bs-warning-bg-subtle);
+    box-shadow: inset 3px 0 0 var(--bs-warning);
+    font-weight: 600;
+}
+
+.op-bp .op-txt,
+.op-bp .op-addr {
+    color: #dc3545;
+}
+
+.op-bp-dot {
+    color: #dc3545;
+    min-width: .8rem;
+}
+
+.op-addr {
+    color: var(--bs-secondary-color);
+    min-width: 3rem;
+}

@@ -1,0 +1,21 @@
+@using Csbf.Core
+
+<label class="form-label mt-2">Instructions <small class="text-muted">(click a row to toggle a breakpoint)</small></label>
+<div class="disasm">
+    @for (var ip = 0; ip < Vm.Ops.Length; ip++)
+    {
+        var addr = ip;
+        <div class="op @(addr == Vm.Ip ? "op-cur" : "") @(Breakpoints.Contains(addr) ? "op-bp" : "")"
+             @onclick="() => OnToggleBreakpoint.InvokeAsync(addr)">
+            <span class="op-bp-dot">@(Breakpoints.Contains(addr) ? "●" : "")</span>
+            <span class="op-addr">@($"0x{addr:X}")</span>
+            <span class="op-txt">@Vm.Ops[addr]</span>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter, EditorRequired] public Vm Vm { get; set; } = default!;
+    [Parameter, EditorRequired] public IReadOnlySet<int> Breakpoints { get; set; } = default!;
+    [Parameter] public EventCallback<int> OnToggleBreakpoint { get; set; }
+}

@@ -1,0 +1,33 @@
+@using Csbf.Core
+
+<div class="d-flex align-items-center flex-wrap gap-3 mt-2">
+    <span class="form-label mb-0">Optimizations</span>
+    @foreach (var (flag, name) in Toggles)
+    {
+        var f = flag; // capture per-iteration for the lambda
+        <div class="form-check form-check-inline mb-0">
+            <input class="form-check-input" type="checkbox" id="opt-@name"
+                   checked="@Passes.HasFlag(f)"
+                   @onchange="e => Toggle(f, (bool)(e.Value ?? false))" />
+            <label class="form-check-label code" for="opt-@name">@name</label>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter, EditorRequired] public OptPasses Passes { get; set; }
+    [Parameter] public EventCallback<OptPasses> PassesChanged { get; set; }
+
+    private static readonly (OptPasses Flag, string Name)[] Toggles =
+    [
+        (OptPasses.Collapse, "collapse"),
+        (OptPasses.ClearLoop, "clear"),
+        (OptPasses.ScanLoop, "scan"),
+    ];
+
+    private Task Toggle(OptPasses flag, bool on)
+    {
+        var next = on ? Passes | flag : Passes & ~flag;
+        return PassesChanged.InvokeAsync(next);
+    }
+}

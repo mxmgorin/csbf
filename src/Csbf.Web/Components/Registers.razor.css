@@ -1,0 +1,10 @@
+.regs {
+    display: flex;
+    gap: 1.25rem;
+    align-items: center;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+
+.regs b {
+    color: var(--bs-primary);
+}
